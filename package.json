@@ -1,0 +1,19 @@
+{
+  "name": "beasty-the-http-server",
+  "version": "1.0.0",
+  "description": "A http server getting built from scratch",
+  "main": "main.js",
+  "scripts": {
+        "dev": "node app/main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NewSmoke38/beasty-the-http-server.git"
+  },
+  "author": "Shivani",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NewSmoke38/beasty-the-http-server/issues"
+  },
+  "homepage": "https://github.com/NewSmoke38/beasty-the-http-server#readme"
+}
