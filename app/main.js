@@ -7,12 +7,25 @@ var N = net.createServer((l) => {           //  a new TCP server created
     console.log({ method: j, path: i, version: q });
 
     let w = "HTTP/1.1 404 Not Found\r\n\r\n";
-    switch (i) {
-      case "/":
-        w =
-          "HTTP/1.1 200 OK\r\n\r\n<html><body><h1>Hello World</h1></body></html>";
-        break;
-    }
+    if (i === "/") {
+      w =
+        "HTTP/1.1 200 OK\r\n\r\n<html><body><h1>Hello World</h1></body></html>";
+    } else {
+        // now lets talk abt response
+        // echo is used cause it sends back exactly what was sent in the first place
+      const echoMatch = i.match(/\/echo\/(.*)/);      // a regular expression to match and extract anything after /echo/ in the path
+      if (echoMatch) {
+        const echoText = echoMatch[1];
+        w = [
+          "HTTP/1.1 200 OK",                 // the magical response
+          "Content-Type: text/plain",
+          `Content-Length: ${echoText.length}`,
+          "",
+          echoText,
+        ].join("\r\n");
+      }    }
+ 
+    
 
     l.write(w);
     l.end();
