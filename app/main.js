@@ -23,7 +23,46 @@ var N = net.createServer((l) => {           //  a new TCP server created
           "",
           echoText,
         ].join("\r\n");
-      }    }
+
+        // user agent is basically  just what machine + software knocked on the server’s door. (browser name)
+      } else if (i === "/user-agent") {
+        const userAgentLine = f.find(line => line.toLowerCase().startsWith("user-agent:"));
+        const userAgent = userAgentLine ? userAgentLine.split(": ")[1] : "Unknown";              // if user agent found then okay or if not then fallback on "unknown"
+        w = [
+          "HTTP/1.1 200 OK",
+          "Content-Type: text/plain",
+          `Content-Length: ${userAgent.length}`,
+          "",
+          userAgent,
+        ].join("\r\n");
+      }
+                  else if (i.startsWith("/files/")) {              // if path starts with /file then we gotta know  that client wanna get a doomed file from our server
+        const path = require("path");
+        const fs = require("fs");
+        const filename = i.replace("/files/", "");           // extracts just the filename from the path
+        const directoryFlagIndex = process.argv.indexOf("--directory");      // searches the directory flag in the server
+        const directoryPath = directoryFlagIndex !== -1 ? process.argv[directoryFlagIndex + 1] : null;         // if --directory was found, get the path immediately after it — e.g., /tmp/
+
+        if (!directoryPath) {
+          w = "HTTP/1.1 500 Internal Server Error\r\n\r\nDirectory not specified.";
+        } else {
+          const fullPath = path.join(directoryPath, filename);         // combine the directoryPath and filename
+          try {
+            const fileContent = fs.readFileSync(fullPath, "utf8");      // if file exists then through utf8 encoding load into fileContent
+            w = [
+              "HTTP/1.1 200 OK",
+              "Content-Type: application/octet-stream",              `Content-Length: ${fileContent.length}`,
+              "",
+              fileContent,
+            ].join("\r\n");
+          } catch (err) {
+            w = "HTTP/1.1 404 Not Found\r\n\r\n";
+          }
+        }
+      }
+    }
+
+    
  
     
 
