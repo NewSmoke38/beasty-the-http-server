@@ -47,17 +47,27 @@ var N = net.createServer((l) => {           //  a new TCP server created
           w = "HTTP/1.1 500 Internal Server Error\r\n\r\nDirectory not specified.";
         } else {
           const fullPath = path.join(directoryPath, filename);         // combine the directoryPath and filename
-          try {
-            const fileContent = fs.readFileSync(fullPath, "utf8");      // if file exists then through utf8 encoding load into fileContent
-            w = [
-              "HTTP/1.1 200 OK",
-              "Content-Type: application/octet-stream",              `Content-Length: ${fileContent.length}`,
-              "",
-              fileContent,
-            ].join("\r\n");
-          } catch (err) {
-            w = "HTTP/1.1 404 Not Found\r\n\r\n";
-          }
+          if (j === "POST") {
+            const body = f[f.length - 1]; // crude way to get request body
+            try {
+              fs.writeFileSync(fullPath, body);
+              w = "HTTP/1.1 201 Created\r\n\r\n";
+            } catch (err) {
+              w = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+            }
+          } else {
+            try {
+              const fileContent = fs.readFileSync(fullPath, "utf8");
+              w = [
+                "HTTP/1.1 200 OK",
+                "Content-Type: application/octet-stream",
+                `Content-Length: ${fileContent.length}`,
+                "",
+                fileContent,
+              ].join("\r\n");
+            } catch (err) {
+              w = "HTTP/1.1 404 Not Found\r\n\r\n";
+            }          }
         }
       }
     }
