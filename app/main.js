@@ -5,18 +5,24 @@ var N = net.createServer((l) => {   // a new TCP server created
   l.on("data", (b) => {             // l is listening to incoming req from client and the data arrives in chunks (b is a Buffer).
     const f = b.toString().split("\r\n"),           // let an array f, then convert b chunks into strings                 
       [j, i, q] = f[0].split(" ");                  // split the string into diff parts of the request like http method = j, path = i, http version = q 
-    if (j === "POST") {
-      const response = [
-        "HTTP/1.1 405 Method Not Allowed",
-        "Content-Type: text/plain",
-        "Content-Length: 33",
-        "",
-        "POST requests are not allowed."
+    
+      //  currently only allowing GET nothing else
+    const allowedMethods = ["GET"];
+
+    // if the request method is not allowed, return a 405 error
+    if (!allowedMethods.includes(j)) {
+      const methodNotAllowedResponse = [
+        "HTTP/1.1 405 Method Not Allowed",  // HTTP status
+        "Content-Type: text/plain",         
+        `Content-Length: ${j.length + 26}`, // calculate length of the message body
+        "",                                 // empty line to separate headers from body
+        `${j} requests are not allowed.`    // body message
       ].join("\r\n");
-      l.write(response);
-      l.end();
-      console.log("Blocked POST request");
-      return;
+
+      l.write(methodNotAllowedResponse);    // Send the response
+      l.end();                             
+      console.log(`Blocked ${j} request`);  
+      return;                               
     }
     console.log({ method: j, path: i, version: q });
 
