@@ -4,7 +4,7 @@
   "description": "A http server getting built from scratch",
   "main": "main.js",
   "scripts": {
-        "dev": "node app/main.js"
+    "dev": "node app/main.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/NewSmoke38/beasty-the-http-server/issues"
   },
-  "homepage": "https://github.com/NewSmoke38/beasty-the-http-server#readme"
+  "homepage": "https://github.com/NewSmoke38/beasty-the-http-server#readme",
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
 }
