@@ -1,1 +1,1 @@
-export const DB_NAME = "Beasty-the-http-server"
+export const DB_NAME = "beasty"

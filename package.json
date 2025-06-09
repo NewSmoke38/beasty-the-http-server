@@ -1,5 +1,5 @@
 {
-  "name": "beasty-the-http-server",
+  "name": "beasty",
   "version": "1.0.0",
   "description": "A http server getting built from scratch",
   "main": "main.js",
