@@ -15,7 +15,10 @@ const beastyCheckController = asyncHandler(async (req, res) => {
     // allowing the admin to bypass the one-time limit for dev purposes
   if (user.role === "admin") {
     return res.status(200).json(
-      new ApiResponse(200, {}, "Admin bypassed one-time Beasty GET check")
+      new ApiResponse(200, {
+        userId: user._id,
+        firstRequestAt: user.firstRequestAt
+      }, "Admin bypassed one-time Beasty GET check")
     );
   }
 

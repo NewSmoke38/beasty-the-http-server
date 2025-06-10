@@ -44,6 +44,14 @@ const userSchema = new Schema(
       enum: ["user", "admin"],
       default: "user"
     },
+    firstRequestAt: {
+    type: Date,
+    default: Date.now,   // sets it automatically when the user is created
+},
+hasUsedBeasty: {
+  type: Boolean,
+  default: false
+}
 
 },
 
