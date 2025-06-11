@@ -80,6 +80,23 @@ l.on("data", (b) => {
     // q = HTTP version (HTTP/1.1)
     const [j, i, q] = f[0].split(" ");
     
+    // Handle root path "/"
+    if (i === "/") {
+        const body = JSON.stringify({ message: "hello broski" });
+        const response = [
+            "HTTP/1.1 200 OK",
+            "Content-Type: application/json",
+            ...corsHeaders,
+            ...securityHeaders,
+            `Content-Length: ${Buffer.byteLength(body)}`,
+            "",
+            body
+        ].join("\r\n");
+        l.write(response);
+        l.end();
+        return;
+    }
+    
     // Rate limiting implementation
     // Get the client's IP address
     const ip = l.remoteAddress;
@@ -105,17 +122,55 @@ l.on("data", (b) => {
     requestCounts.set(ip, userRequests);
     
     // Check if user has exceeded rate limit (2 requests per 15 minutes)
+    // We'll check the role after getting the backend response
     if (userRequests.count > config.rateLimit.max) {
-        const response = [
-            "HTTP/1.1 429 Too Many Requests",
-            "Content-Type: application/json",
-            "Retry-After: " + Math.ceil(config.rateLimit.windowMs / 1000),
-            "",
-            JSON.stringify({ error: "Too many requests" })
-        ].join("\r\n");
-        l.write(response);
-        l.end();
-        return;
+        // Make the backend request first to check if user is admin
+        fetch(`${config.backendUrl}/api/v1/beasty/check`, {
+            method: "GET",
+            headers: { 
+                Authorization: `Bearer ${token}`,
+                'Accept': 'application/json'
+            },
+            signal: controller.signal
+        })
+        .then(async (beResponse) => {
+            const beData = await beResponse.json();
+            
+            // If user is admin, bypass rate limit
+            if (beData.data?.role === "admin") {
+                // Continue with the request
+                return;
+            }
+            
+            // If not admin, apply rate limit
+            const response = [
+                "HTTP/1.1 429 Too Many Requests",
+                "Content-Type: application/json",
+                "Retry-After: " + Math.ceil(config.rateLimit.windowMs / 1000),
+                ...corsHeaders,
+                ...securityHeaders,
+                "",
+                JSON.stringify({ error: "Too many requests" })
+            ].join("\r\n");
+            l.write(response);
+            l.end();
+            return;
+        })
+        .catch((err) => {
+            // If there's an error checking admin status, apply rate limit
+            const response = [
+                "HTTP/1.1 429 Too Many Requests",
+                "Content-Type: application/json",
+                "Retry-After: " + Math.ceil(config.rateLimit.windowMs / 1000),
+                ...corsHeaders,
+                ...securityHeaders,
+                "",
+                JSON.stringify({ error: "Too many requests" })
+            ].join("\r\n");
+            l.write(response);
+            l.end();
+            return;
+        });
     }
 
 
@@ -232,19 +287,29 @@ const timeout = setTimeout(() => controller.abort(), config.timeout);
 // Make request to backend server, the client is beast(the-http-server) it self, lesssgoooo
 fetch(`${config.backendUrl}/api/v1/beasty/check`, {
     method: "GET",
-    
-    // Send the token in Authorization header
-    headers: { Authorization: `Bearer ${token}` },
-    
-    // Add the abort signal for timeout
+    headers: { 
+        Authorization: `Bearer ${token}`,
+        'Accept': 'application/json'
+    },
     signal: controller.signal
 })
 .then(async (beResponse) => {
     // Clear the timeout since we got a response
     clearTimeout(timeout);
     
-    // Convert backend response to JSON, (beasty is converting into JSON mhmhmhmhmhm)
+    // Check if response is JSON
+    const contentType = beResponse.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+        throw new Error(`Invalid response type from backend: ${contentType}`);
+    }
+    
+    // Convert backend response to JSON
     const beData = await beResponse.json();
+    
+    // Validate the response structure
+    if (!beData || typeof beData !== 'object') {
+        throw new Error('Invalid response format from backend');
+    }
     
     // Calculate how long the server has been running, beasty the mathematician
     const beastyUptimeSeconds = Math.floor(
@@ -309,12 +374,27 @@ fetch(`${config.backendUrl}/api/v1/beasty/check`, {
             })
             .catch((err) => {
                 clearTimeout(timeout);
+                let errorMessage = "Internal server error";
+                let statusCode = 500;
+                
+                if (err.name === 'AbortError') {
+                    errorMessage = "Request timeout";
+                    statusCode = 408;
+                } else if (err.code === 'ECONNREFUSED') {
+                    errorMessage = "Backend service unavailable";
+                    statusCode = 503;
+                } else if (err.message.includes('Invalid response type')) {
+                    errorMessage = "Backend service error";
+                    statusCode = 502;
+                }
+                
                 const body = JSON.stringify({ 
-                    error: "Internal server error", 
-                    details: err.name === 'AbortError' ? 'Request timeout' : err.message 
+                    error: errorMessage, 
+                    details: err.message 
                 });
+                
                 const headers = [
-                    "HTTP/1.1 500 Internal Server Error",
+                    `HTTP/1.1 ${statusCode} ${errorMessage}`,
                     "Content-Type: application/json",
                     ...corsHeaders,
                     ...securityHeaders,
