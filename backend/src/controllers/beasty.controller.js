@@ -12,34 +12,41 @@ const beastyCheckController = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User not found");
   }
 
-    // allowing the admin to bypass the one-time limit for dev purposes
+  // allowing the admin to bypass the request limit
   if (user.role === "admin") {
     return res.status(200).json(
       new ApiResponse(200, {
         userId: user._id,
-        firstRequestAt: user.firstRequestAt
-      }, "Admin bypassed one-time Beasty GET check")
+        firstRequestAt: user.firstRequestAt,
+        role: "admin"
+      }, "Admin bypassed Beasty GET check")
     );
   }
-
-  if (user.hasUsedBeasty) {
-    throw new ApiError(403, "You have already used your one-time Beasty GET request.");
+  // giving 3 reqs per userID
+  // Initialize requestCount if it doesn't exist
+  if (!user.requestCount) {
+    user.requestCount = 0;
   }
 
-  // Mark as used
-  user.hasUsedBeasty = true;
-  await user.save({ validateBeforeSave: false });     // permanently saved in db that this user used his GET req
-  
+  // Check if user has exceeded their 3 requests
+  if (user.requestCount >= 3) {
+    throw new ApiError(403, "You have used all 3 of your allowed Beasty requests.");
+  }
+
+  // Increment request count        // smarty
+  user.requestCount += 1;
+  await user.save({ validateBeforeSave: false });
   
   return res.status(200).json(
-  new ApiResponse(200, {
-    userId: user._id,
-    firstRequestAt: user.firstRequestAt,
-  }, "Access granted for Beasty GET")
-);
-
+    new ApiResponse(200, {
+      userId: user._id,
+      firstRequestAt: user.firstRequestAt,
+      requestCount: user.requestCount,
+      remainingRequests: 3 - user.requestCount
+    }, "Access granted for Beasty GET")
+  );
 });
 
 export {
-beastyCheckController
+  beastyCheckController
 };

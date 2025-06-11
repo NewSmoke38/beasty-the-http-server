@@ -12,12 +12,12 @@ export const config = {
 
     // Rate limiting settings
     rateLimit: {
-        // 15 minutes in milliseconds (15 * 60 * 1000)
+        // 5 minutes in milliseconds (15 * 60 * 1000)
         // This is how long we track requests from each IP
-        windowMs: 15 * 60 * 1000,
+        windowMs: 5 * 60 * 1000,
 
         // Maximum number of requests allowed per IP in the time window
-        max: 2
+        max: 3
     },
 
     // How long to wait for a response before timing out (5 seconds)

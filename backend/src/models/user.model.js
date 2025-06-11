@@ -48,9 +48,11 @@ const userSchema = new Schema(
     type: Date,
     default: Date.now,   // sets it automatically when the user is created
 },
-hasUsedBeasty: {
-  type: Boolean,
-  default: false
+requestCount: {
+  type: Number,
+  default: 0,
+  min: 0,
+  max: 3
 }
 
 },
