@@ -3,6 +3,8 @@ const net = require("net");
 const zlib = require("zlib");       // for gzip compression
 const { config } = require('../config.js');
 const jwt = require('jsonwebtoken');
+const connectionCounts = new Map();  // For TCP-level rate limiting
+const connectionTimestamps = new Map();  // Track when connections were made
 console.log("Logs from your program will appear here!");
 
 // CORS headers
@@ -36,6 +38,7 @@ const securityHeaders = [
 // Rate limiting
 // Create a Map(it is better here in this case) to store request counts for each IP address
 const requestCounts = new Map();
+const ipBlockList = new Map();  // Add this line for IP blocking
 
 // Set up a cleanup interval that runs every 60 seconds (60000 milliseconds)
 const cleanupInterval = setInterval(() => {
@@ -79,12 +82,10 @@ global.beastyStartTime = Date.now();
 
 // Create a new TCP server using Node's net module
 // 'l' is the socket connection for each client
-const server = net.createServer((l) => {
-    // Set a timeout for each connection
-    // If a request takes longer than config.timeout (5 seconds),
-    // it will trigger the timeout event
-    l.setTimeout(config.timeout);
-    
+const server = net.createServer({
+    maxConnections: 100,  // Global connection limit
+    pauseOnConnect: true  // Reject new connections when limit reached
+}, (l) => {
     // Handle connection errors
     l.on('error', (err) => {
         console.error('Connection error:', err);
@@ -94,261 +95,280 @@ const server = net.createServer((l) => {
     l.on('close', () => {
         console.log('Connection closed');
     });
-    
-    // Listen for the timeout event
-    l.on("timeout", () => {
-        const response = [
-            "HTTP/1.1 408 Request Timeout",
-            "Content-Type: application/json",
-            "",
-            JSON.stringify({ error: "Request timeout" })
-        ].join("\r\n");  
-        l.write(response);
-        l.end();
-    });
 
-// data is received from the client in form of 'b' = is the raw buffer data incoming
-l.on("data", (b) => {
-    const f = b.toString().split("\r\n");   // b comes in packets so need to get converted into string
-    //  the first line of the HTTP request is split up into many strings from the one main string
-    // j = HTTP method (GET, POST, etc.)
-    // i = path (/beasty, /echo, etc.)
-    // q = HTTP version (HTTP/1.1)
-    const [j, i, q] = f[0].split(" ");
-    
-    // Rate limiting implementation
-    // Get the client's IP address
-    const ip = l.remoteAddress;
-    
-    // Get current timestamp
-    const now = Date.now();
-    
-    // Get existing request count for this IP or create new if none exists
-    // If no entry exists, create one with count 0 and current timestamp
-    const userRequests = requestCounts.get(ip) || { count: 0, timestamp: now };
-    
-    // Check if it's been more than the rate limit window (15 minutes)
-    if (now - userRequests.timestamp > config.rateLimit.windowMs) {
-        // If yes, reset the count to 1 and update timestamp
-        userRequests.count = 1;
-        userRequests.timestamp = now;
-    } else {
-        // If no, increment the count
-        userRequests.count++;
-    }
-    
-    // Save the updated request count back to our Map
-    requestCounts.set(ip, userRequests);
-    
-        // Check if user has exceeded rate limit (3 requests per window)
+    // data is received from the client in form of 'b' = is the raw buffer data incoming
+    l.on("data", (b) => {
+        console.log('Received data from client');
+        // Convert the buffer to a string
+        const data = b.toString();
+        console.log('Parsing request data');
+        // Parse the HTTP request
+        const [requestLine, ...headers] = data.split("\r\n");
+        console.log('Request line:', requestLine);
+        
+        // Extract the request method, path, and HTTP version
+        const [method, path, httpVersion] = requestLine.split(" ");
+        console.log('Method:', method, 'Path:', path);
+
+        // Parse headers into an object
+        const headerObj = {};
+        for (const header of headers) {
+            if (header) {
+                const [key, value] = header.split(": ");
+                headerObj[key.toLowerCase()] = value;
+            }
+        }
+        console.log('Headers parsed');
+
+        const ip = l.remoteAddress;
+        
+        // check if IP is blocked first, before any other processing
+        if (ipBlockList.has(ip)) {
+            const blockData = ipBlockList.get(ip);
+            if (blockData.blockedUntil > Date.now()) {
+                // just destroy the connection without any response
+                l.destroy();
+                return;
+            } else {
+                ipBlockList.delete(ip);
+            }
+        }
+
+        // Rate limiting implementation
+        // Get current timestamp
+        const now = Date.now();
+        
+        // Get existing request count for this IP or create new if none exists
+        // If no entry exists, create one with count 0 and current timestamp
+        const userRequests = requestCounts.get(ip) || { count: 0, timestamp: now };
+        
+        // Check if it's been more than the rate limit window (15 minutes)
+        if (now - userRequests.timestamp > config.rateLimit.windowMs) {
+            // If yes, reset the count to 1 and update timestamp
+            userRequests.count = 1;
+            userRequests.timestamp = now;
+        } else {
+            // If no, increment the count
+            userRequests.count++;
+        }
+        
+        // Save the updated request count back to our Map
+        requestCounts.set(ip, userRequests);
+        
+        // When rate limit is exceeded (5th request)
         if (userRequests.count > config.rateLimit.max) {
+            // Block the IP for 3 minutes
+            ipBlockList.set(ip, {
+                blockedUntil: Date.now() + (3 * 60 * 1000), // 3 minutes
+                violations: (ipBlockList.get(ip)?.violations || 0) + 1
+            });
+
+            // Send the "all requests used" message for the 5th attempt
             const body = JSON.stringify({ 
                 error: "Rate limit exceeded",
-                details: "You have used all 3 of your allowed Beasty requests."
+                details: "You have used all 4 of your allowed Beasty requests."
             });
             
             const response = [
                 "HTTP/1.1 403 Forbidden",
-            "Content-Type: application/json",
+                "Content-Type: application/json",
                 ...corsHeaders,
                 ...securityHeaders,
                 `Content-Length: ${Buffer.byteLength(body)}`,
-            "",
+                "",
                 body
             ].join("\r\n");
             
-            // Write response and end this request properly
             l.write(response, () => {
-                // Only end this specific request, not the entire connection
-                l.end();
+                l.destroy();
             });
             return;
         }
 
 
-// allowed stuff 
-// GET: for getting data
-// OPTIONS: special req for checking what methods are allowed (used by browsers for CORS)
-const allowedMethods = ["GET", "OPTIONS"];
+    // allowed stuff 
+    // GET: for getting data
+    // OPTIONS: special req for checking what methods are allowed (used by browsers for CORS)
+    const allowedMethods = ["GET", "OPTIONS"];
 
-if (j === "OPTIONS") {
-    const response = [
-        "HTTP/1.1 204 No Content",
-        
-        // Add our CORS headers so browser knows what's allowed
-        ...corsHeaders,
-        
-        // Add security headers
-        ...securityHeaders,
-        
-        // Since there's no content, length is 0
-        "Content-Length: 0",
-        "",
-        ""
-    ].join("\r\n");
-    l.write(response);
-    l.end();
-    return;
-}
-
-
-// Check if the requested method is allowed
-if (!allowedMethods.includes(j)) {
-    const body = JSON.stringify({ 
-        error: `${j} requests are not allowed.` 
-    });
-    
-    const response = [
-        "HTTP/1.1 405 Method Not Allowed",
-        "Content-Type: application/json",
-        ...corsHeaders,
-        ...securityHeaders,
-        `Content-Length: ${Buffer.byteLength(body)}`,
-        "",
-        body
-    ].join("\r\n");
-    l.write(response);
-    l.end();
-    return;
-}
-
-        // 1st req (optional but recommended first)
-        // Handle root path "/"
-        if (i === "/") {  
-            const authLine = f.find(line => line.toLowerCase().startsWith("authorization:"));
-            const token = authLine ? authLine.split(" ")[2] : null;
+    if (method === "OPTIONS") {
+        const response = [
+            "HTTP/1.1 204 No Content",
             
-            if (!token) {
-                const body = JSON.stringify({ 
-                    error: "Authorization token missing" 
-                });
+            // Add our CORS headers so browser knows what's allowed
+            ...corsHeaders,
+            
+            // Add security headers
+            ...securityHeaders,
+            
+            // Since there's no content, length is 0
+            "Content-Length: 0",
+            "",
+            ""
+        ].join("\r\n");
+        l.write(response);
+        l.end();
+        return;
+    }
+
+
+    // Check if the requested method is allowed
+    if (!allowedMethods.includes(method)) {
+        const body = JSON.stringify({ 
+            error: `${method} requests are not allowed.` 
+        });
+        
+        const response = [
+            "HTTP/1.1 405 Method Not Allowed",
+            "Content-Type: application/json",
+            ...corsHeaders,
+            ...securityHeaders,
+            `Content-Length: ${Buffer.byteLength(body)}`,
+            "",
+            body
+        ].join("\r\n");
+        l.write(response);
+        l.end();
+        return;
+    }
+
+            // 1st req (optional but recommended first)
+            // Handle root path "/"
+            if (path === "/") {  
+                const authLine = headers.find(line => line.toLowerCase().startsWith("authorization:"));
+                const token = authLine ? authLine.split(" ")[2] : null;
                 
-                const response = [
-                    "HTTP/1.1 401 Unauthorized",
-                    "Content-Type: application/json",
-                    ...corsHeaders,
-                    ...securityHeaders,
-                    `Content-Length: ${Buffer.byteLength(body)}`,
-                    "",
-                    body
-                ].join("\r\n");
-                l.write(response);
-                l.end();
+                if (!token) {
+                    const body = JSON.stringify({ 
+                        error: "Authorization token missing" 
+                    });
+                    
+                    const response = [
+                        "HTTP/1.1 401 Unauthorized",
+                        "Content-Type: application/json",
+                        ...corsHeaders,
+                        ...securityHeaders,
+                        `Content-Length: ${Buffer.byteLength(body)}`,
+                        "",
+                        body
+                    ].join("\r\n");
+                    l.write(response);
+                    l.end();
+                    return;
+                }
+
+                // timeout, really interesting 
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), config.timeout);
+
+                // Make request to backend to verify the token (yes this happens everytime for the sake of auth duh, well its imp so...)
+                fetch(`${config.backendUrl}/api/v1/beasty/check`, {
+                    method: "GET",  
+                    headers: { 
+                        Authorization: `Bearer ${token}`,  
+                        'Accept': 'application/json'      
+                    },
+                    signal: controller.signal  
+                })
+                .then(async (beResponse) => {
+                    // Clear timeout since we got a response
+                    clearTimeout(timeout);
+                    
+                    if (!beResponse.ok) {
+                        throw new Error('You have already used your one-time Beasty GET request.');
+                    }
+
+                    const beData = await beResponse.json();
+                    // if token is good
+                    const body = JSON.stringify({ 
+                        message: "hello user",
+                        userId: beData.data?.userId || null
+                    });
+                    
+                    const response = [
+                        "HTTP/1.1 200 OK",
+                        "Content-Type: application/json",
+                        ...corsHeaders,
+                        ...securityHeaders,
+                        `Content-Length: ${Buffer.byteLength(body)}`,
+                        "",
+                        body
+                    ].join("\r\n");
+                    l.write(response);
+                    l.end();
+                })
+                .catch((err) => {
+                    clearTimeout(timeout);
+                    const body = JSON.stringify({ 
+                        error: "Beasty Error", 
+                        details: err.message 
+                    });
+                    
+                    const response = [
+                        "HTTP/1.1 401 Unauthorized",
+                        "Content-Type: application/json",
+                        ...corsHeaders,
+                        ...securityHeaders,
+                        `Content-Length: ${Buffer.byteLength(body)}`,
+                        "",
+                        body
+                    ].join("\r\n");
+                    
+                    // Write response and properly close the socket
+                    l.write(response, () => {
+                        l.destroy();
+                    });
+                });
                 return;
             }
 
-            // timeout, really interesting 
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), config.timeout);
 
-            // Make request to backend to verify the token (yes this happens everytime for the sake of auth duh, well its imp so...)
-            fetch(`${config.backendUrl}/api/v1/beasty/check`, {
-                method: "GET",  
-                headers: { 
-                    Authorization: `Bearer ${token}`,  
-                    'Accept': 'application/json'      
-                },
-                signal: controller.signal  
-            })
-            .then(async (beResponse) => {
-                // Clear timeout since we got a response
-                clearTimeout(timeout);
-                
-                if (!beResponse.ok) {
-                    throw new Error('You have already used your one-time Beasty GET request.');
-                }
+    // actual endpoint hitting starts here, w a user asking for magic basically lol
+             // Handle /beasty route
+        if (path.startsWith("/beasty")) {
+          // extracts authorization header from the incoming request lines
+          const authLine = headers.find(line => line.toLowerCase().startsWith("authorization:"));
+          const token = authLine ? authLine.split(" ")[2] : null;       // and give null if not get token
+                 
+    if (!token) {
+        const body = JSON.stringify({ 
+            error: "Authorization token missing" 
+        });
+        
+        const response = [
+            "HTTP/1.1 401 Unauthorized",
+            "Content-Type: application/json",
+            ...corsHeaders,
+            ...securityHeaders,
+            `Content-Length: ${Buffer.byteLength(body)}`,
+            "",
+            body
+        ].join("\r\n");
+        l.write(response);
+        l.end();
+        return;
+    }
 
-                const beData = await beResponse.json();
-                // if token is good
-                const body = JSON.stringify({ 
-                    message: "hello user",
-                    userId: beData.data?.userId || null
-                });
-                
-                const response = [
-                    "HTTP/1.1 200 OK",
-                    "Content-Type: application/json",
-                    ...corsHeaders,
-                    ...securityHeaders,
-                    `Content-Length: ${Buffer.byteLength(body)}`,
-                    "",
-                    body
-                ].join("\r\n");
-                l.write(response);
-                l.end();
-            })
-            .catch((err) => {
-                clearTimeout(timeout);
-                const body = JSON.stringify({ 
-                    error: "Beasty Error", 
-                    details: err.message 
-                });
-                
-                const response = [
-                    "HTTP/1.1 401 Unauthorized",
-                    "Content-Type: application/json",
-                    ...corsHeaders,
-                    ...securityHeaders,
-                    `Content-Length: ${Buffer.byteLength(body)}`,
-                    "",
-                    body
-                ].join("\r\n");
-                
-                // Write response and properly close the socket
-                l.write(response, () => {
-                    l.destroy();
-                });
-            });
-            return;
-        }
+    // Set up timeout for the backend request
+    // AbortController cancels the request if it takes too long
+    const controller = new AbortController();
 
+    const timeout = setTimeout(() => controller.abort(), config.timeout);
 
-// actual endpoint hitting starts here, w a user asking for magic basically lol
-         // Handle /beasty route
-    if (i.startsWith("/beasty")) {
-      // extracts authorization header from the incoming request lines
-      const authLine = f.find(line => line.toLowerCase().startsWith("authorization:"));
-      const token = authLine ? authLine.split(" ")[2] : null;       // and give null if not get token
-             
-if (!token) {
-    const body = JSON.stringify({ 
-        error: "Authorization token missing" 
-    });
-    
-    const response = [
-        "HTTP/1.1 401 Unauthorized",
-        "Content-Type: application/json",
-        ...corsHeaders,
-        ...securityHeaders,
-        `Content-Length: ${Buffer.byteLength(body)}`,
-        "",
-        body
-    ].join("\r\n");
-    l.write(response);
-    l.end();
-    return;
-}
-
-// Set up timeout for the backend request
-// AbortController cancels the request if it takes too long
-const controller = new AbortController();
-
-const timeout = setTimeout(() => controller.abort(), config.timeout);
-
-// spicy stuff here, which i am proud of, cause this whole checking ideation was purely mine.
-// Make request to backend server, the client is beast(the-http-server) it self, lesssgoooo
-fetch(`${config.backendUrl}/api/v1/beasty/check`, {
-    method: "GET",
-                headers: { 
-                    Authorization: `Bearer ${token}`,
-                    'Accept': 'application/json'
-                },
-    signal: controller.signal
-})
-.then(async (beResponse) => {
-    // Clear the timeout since we got a response
-    clearTimeout(timeout);
-    
+    // spicy stuff here, which i am proud of, cause this whole checking ideation was purely mine.
+    // Make request to backend server, the client is beast(the-http-server) it self, lesssgoooo
+    fetch(`${config.backendUrl}/api/v1/beasty/check`, {
+        method: "GET",
+                    headers: { 
+                        Authorization: `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    },
+        signal: controller.signal
+    })
+    .then(async (beResponse) => {
+        // Clear the timeout since we got a response
+        clearTimeout(timeout);
+        
                 // Check if response is JSON
                 const contentType = beResponse.headers.get('content-type');
                 if (!contentType || !contentType.includes('application/json')) {
@@ -356,7 +376,7 @@ fetch(`${config.backendUrl}/api/v1/beasty/check`, {
                 }
                 
                 // Convert backend response to JSON
-    const beData = await beResponse.json();
+        const beData = await beResponse.json();
                 
                 // Validate the response structure
                 if (!beData || typeof beData !== 'object') {
@@ -369,13 +389,13 @@ fetch(`${config.backendUrl}/api/v1/beasty/check`, {
     );
     
     // Get the user's browser/device info
-    const userAgent = extractUserAgent(f);          // oooo shady, actually 
+    const userAgent = extractUserAgent(headers);          // oooo shady, actually 
     
     // Get the user's IP address
     const ip = l.remoteAddress || "Unknown";
     
     // Parse the URL to check for query parameters
-    const urlParts = i.split("?");
+    const urlParts = path.split("?");
     const queryString = urlParts[1] || "";
     
     // Check if user wants to see their IP, we dont keep it so dont worry, we aint hungry dude
