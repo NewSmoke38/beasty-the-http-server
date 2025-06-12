@@ -3,8 +3,6 @@ const net = require("net");
 const zlib = require("zlib");       // for gzip compression
 const { config } = require('../config.js');
 const jwt = require('jsonwebtoken');
-const connectionCounts = new Map();  // For TCP-level rate limiting
-const connectionTimestamps = new Map();  // Track when connections were made
 console.log("Logs from your program will appear here!");
 
 // CORS headers
@@ -74,52 +72,14 @@ process.on('SIGTERM', () => {
 global.beastyStartTime = Date.now();        // shows server up time of beasty
 
 
-// Store the server start time globally
-// This is used to calculate server uptime
-global.beastyStartTime = Date.now();
 
 
 
 // Create a new TCP server using Node's net module
 // 'l' is the socket connection for each client
-const server = net.createServer({
-    maxConnections: 100,  // Global connection limit
-    pauseOnConnect: true  // Reject new connections when limit reached
-}, (l) => {
-    // Handle connection errors
-    l.on('error', (err) => {
-        console.error('Connection error:', err);
-    });
-
-    // Handle connection close
-    l.on('close', () => {
-        console.log('Connection closed');
-    });
-
+const server = net.createServer((l) => {
     // data is received from the client in form of 'b' = is the raw buffer data incoming
     l.on("data", (b) => {
-        console.log('Received data from client');
-        // Convert the buffer to a string
-        const data = b.toString();
-        console.log('Parsing request data');
-        // Parse the HTTP request
-        const [requestLine, ...headers] = data.split("\r\n");
-        console.log('Request line:', requestLine);
-        
-        // Extract the request method, path, and HTTP version
-        const [method, path, httpVersion] = requestLine.split(" ");
-        console.log('Method:', method, 'Path:', path);
-
-        // Parse headers into an object
-        const headerObj = {};
-        for (const header of headers) {
-            if (header) {
-                const [key, value] = header.split(": ");
-                headerObj[key.toLowerCase()] = value;
-            }
-        }
-        console.log('Headers parsed');
-
         const ip = l.remoteAddress;
         
         // check if IP is blocked first, before any other processing
@@ -134,6 +94,13 @@ const server = net.createServer({
             }
         }
 
+        const f = b.toString().split("\r\n");   // b comes in packets so need to get converted into string
+        //  the first line of the HTTP request is split up into many strings from the one main string
+        // j = HTTP method (GET, POST, etc.)
+        // i = path (/beasty, /echo, etc.)
+        // q = HTTP version (HTTP/1.1)
+        const [j, i, q] = f[0].split(" ");
+        
         // Rate limiting implementation
         // Get current timestamp
         const now = Date.now();
@@ -191,7 +158,7 @@ const server = net.createServer({
     // OPTIONS: special req for checking what methods are allowed (used by browsers for CORS)
     const allowedMethods = ["GET", "OPTIONS"];
 
-    if (method === "OPTIONS") {
+    if (j === "OPTIONS") {
         const response = [
             "HTTP/1.1 204 No Content",
             
@@ -213,9 +180,9 @@ const server = net.createServer({
 
 
     // Check if the requested method is allowed
-    if (!allowedMethods.includes(method)) {
+    if (!allowedMethods.includes(j)) {
         const body = JSON.stringify({ 
-            error: `${method} requests are not allowed.` 
+            error: `${j} requests are not allowed.` 
         });
         
         const response = [
@@ -234,8 +201,8 @@ const server = net.createServer({
 
             // 1st req (optional but recommended first)
             // Handle root path "/"
-            if (path === "/") {  
-                const authLine = headers.find(line => line.toLowerCase().startsWith("authorization:"));
+            if (i === "/") {  
+                const authLine = f.find(line => line.toLowerCase().startsWith("authorization:"));
                 const token = authLine ? authLine.split(" ")[2] : null;
                 
                 if (!token) {
@@ -325,9 +292,9 @@ const server = net.createServer({
 
     // actual endpoint hitting starts here, w a user asking for magic basically lol
              // Handle /beasty route
-        if (path.startsWith("/beasty")) {
+        if (i.startsWith("/beasty")) {
           // extracts authorization header from the incoming request lines
-          const authLine = headers.find(line => line.toLowerCase().startsWith("authorization:"));
+          const authLine = f.find(line => line.toLowerCase().startsWith("authorization:"));
           const token = authLine ? authLine.split(" ")[2] : null;       // and give null if not get token
                  
     if (!token) {
@@ -389,13 +356,13 @@ const server = net.createServer({
     );
     
     // Get the user's browser/device info
-    const userAgent = extractUserAgent(headers);          // oooo shady, actually 
+    const userAgent = extractUserAgent(f);          // oooo shady, actually 
     
     // Get the user's IP address
     const ip = l.remoteAddress || "Unknown";
     
     // Parse the URL to check for query parameters
-    const urlParts = path.split("?");
+    const urlParts = i.split("?");
     const queryString = urlParts[1] || "";
     
     // Check if user wants to see their IP, we dont keep it so dont worry, we aint hungry dude

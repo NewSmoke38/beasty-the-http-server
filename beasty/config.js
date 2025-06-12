@@ -21,7 +21,7 @@ export const config = {
     },
 
     // How long to wait for a response before timing out (5 seconds)
-    timeout: 10000,
+    timeout: 5000,
 
     // Gzip compression settings
     compression: {
