@@ -2,7 +2,35 @@ const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch
 const net = require("net");
 const zlib = require("zlib");       // for gzip compression
 const { config } = require('../config.js');
+const jwt = require('jsonwebtoken');
 console.log("Logs from your program will appear here!");
+
+// CORS headers
+const corsHeaders = [
+    // Allows specific websites to access your server
+    "Access-Control-Allow-Origin: " + config.corsOrigins.join(", "),
+    "Access-Control-Allow-Methods: GET",       // only GET allowed 
+    "Access-Control-Allow-Headers: Content-Type, Authorization",
+    // for how much time should the browser cache these data, we will do it for 24 hrs
+    "Access-Control-Max-Age: 86400"
+];
+
+//  protection against common web vulnerabilities
+const securityHeaders = [
+    "X-Content-Type-Options: nosniff",     // stops browser from mimie-sniffing(guessing the type of data server is sending) it can be bad ...
+
+    // Prevents your site from being embedded in iframes    // actually means that a website cant put our website in thiers to show off like its thier toy hehe
+    // Protects against clickjacking attacks        // this one is so lit tbh
+    "X-Frame-Options: DENY",
+
+    // Enables browser's XSS filtering
+    // Blocks the page if XSS attack is detected
+    "X-XSS-Protection: 1; mode=block",       // here 1 means turn on protection and block means if smthg sus is detected forging our website then we'll block the whole page haha
+
+    // Forces browsers to use HTTPS, max age=1year
+    "Strict-Transport-Security: max-age=31536000; includeSubDomains"
+];
+
 
 
 // Rate limiting
@@ -57,6 +85,16 @@ const server = net.createServer((l) => {
     // it will trigger the timeout event
     l.setTimeout(config.timeout);
     
+    // Handle connection errors
+    l.on('error', (err) => {
+        console.error('Connection error:', err);
+    });
+
+    // Handle connection close
+    l.on('close', () => {
+        console.log('Connection closed');
+    });
+    
     // Listen for the timeout event
     l.on("timeout", () => {
         const response = [
@@ -68,7 +106,6 @@ const server = net.createServer((l) => {
         l.write(response);
         l.end();
     });
-
 
 // data is received from the client in form of 'b' = is the raw buffer data incoming
 l.on("data", (b) => {
@@ -103,86 +140,30 @@ l.on("data", (b) => {
     // Save the updated request count back to our Map
     requestCounts.set(ip, userRequests);
     
-
-    // Check if user has exceeded rate limit (2 requests per 15 minutes)
-    // We'll check the role after getting the backend response
-    if (userRequests.count > config.rateLimit.max) {
-        // Make the backend request first to check if user is admin
-        fetch(`${config.backendUrl}/api/v1/beasty/check`, {
-            method: "GET",
-            headers: { 
-                Authorization: `Bearer ${token}`,
-                'Accept': 'application/json'
-            },
-            signal: controller.signal
-        })
-        .then(async (beResponse) => {
-            const beData = await beResponse.json();
+        // Check if user has exceeded rate limit (3 requests per window)
+        if (userRequests.count > config.rateLimit.max) {
+            const body = JSON.stringify({ 
+                error: "Rate limit exceeded",
+                details: "You have used all 3 of your allowed Beasty requests."
+            });
             
-            // If user is admin, bypass rate limit
-            if (beData.data?.role === "admin") {
-                // Continue with the request
-                return;
-            }
-            
-            // If not admin, apply rate limit
             const response = [
-                "HTTP/1.1 429 Too Many Requests",
-                "Content-Type: application/json",
-                "Retry-After: " + Math.ceil(config.rateLimit.windowMs / 1000),
+                "HTTP/1.1 403 Forbidden",
+            "Content-Type: application/json",
                 ...corsHeaders,
                 ...securityHeaders,
-                "",
-                JSON.stringify({ error: "Too many requests" })
+                `Content-Length: ${Buffer.byteLength(body)}`,
+            "",
+                body
             ].join("\r\n");
-            l.write(response);
-            l.end();
+            
+            // Write response and end this request properly
+            l.write(response, () => {
+                // Only end this specific request, not the entire connection
+                l.end();
+            });
             return;
-        })
-        .catch((err) => {       // for extra safety
-            // If there's an error checking admin status, apply rate limit
-            const response = [
-                "HTTP/1.1 429 Too Many Requests",
-                "Content-Type: application/json",
-                "Retry-After: " + Math.ceil(config.rateLimit.windowMs / 1000),
-                ...corsHeaders,
-                ...securityHeaders,
-                "",
-                JSON.stringify({ error: "Too many requests" })
-            ].join("\r\n");
-            l.write(response);
-            l.end();
-            return;
-        });
-    }
-
-
-
-// CORS headers
-const corsHeaders = [
-    // Allows specific websites to access your server
-    "Access-Control-Allow-Origin: " + config.corsOrigins.join(", "),
-    "Access-Control-Allow-Methods: GET",       // only GET allowed 
-    "Access-Control-Allow-Headers: Content-Type, Authorization",
-    // for how much time should the browser cache these data, we will do it for 24 hrs
-    "Access-Control-Max-Age: 86400"
-];
-
-//  protection against common web vulnerabilities
-const securityHeaders = [
-    "X-Content-Type-Options: nosniff",     // stops browser from mimie-sniffing(guessing the type of data server is sending) it can be bad ...
-
-    // Prevents your site from being embedded in iframes    // actually means that a website cant put our website in thiers to show off like its thier toy hehe
-    // Protects against clickjacking attacks        // this one is so lit tbh
-    "X-Frame-Options: DENY",
-
-    // Enables browser's XSS filtering
-    // Blocks the page if XSS attack is detected
-    "X-XSS-Protection: 1; mode=block",       // here 1 means turn on protection and block means if smthg sus is detected forging our website then we'll block the whole page haha
-
-    // Forces browsers to use HTTPS, max age=1year
-    "Strict-Transport-Security: max-age=31536000; includeSubDomains"
-];
+        }
 
 
 // allowed stuff 
@@ -231,104 +212,104 @@ if (!allowedMethods.includes(j)) {
     return;
 }
 
-// 1st req (optional but recommended first)
-// Handle root path "/"
-if (i === "/") {  
-    const authLine = f.find(line => line.toLowerCase().startsWith("authorization:"));
-    const token = authLine ? authLine.split(" ")[2] : null;
-    
-    if (!token) {
-        const body = JSON.stringify({ 
-            error: "Authorization token missing" 
-        });
-        
-        const response = [
-            "HTTP/1.1 401 Unauthorized",
-            "Content-Type: application/json",
-            ...corsHeaders,
-            ...securityHeaders,
-            `Content-Length: ${Buffer.byteLength(body)}`,
-            "",
-            body
-        ].join("\r\n");
-        l.write(response);
-        l.end();
-        return;
-    }
+        // 1st req (optional but recommended first)
+        // Handle root path "/"
+        if (i === "/") {  
+            const authLine = f.find(line => line.toLowerCase().startsWith("authorization:"));
+            const token = authLine ? authLine.split(" ")[2] : null;
+            
+            if (!token) {
+                const body = JSON.stringify({ 
+                    error: "Authorization token missing" 
+                });
+                
+                const response = [
+                    "HTTP/1.1 401 Unauthorized",
+                    "Content-Type: application/json",
+                    ...corsHeaders,
+                    ...securityHeaders,
+                    `Content-Length: ${Buffer.byteLength(body)}`,
+                    "",
+                    body
+                ].join("\r\n");
+                l.write(response);
+                l.end();
+                return;
+            }
 
-    // timeout, really interesting 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), config.timeout);
+            // timeout, really interesting 
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), config.timeout);
 
-    // Make request to backend to verify the token (yes this happens everytime for the sake of auth duh, well its imp so...)
-    fetch(`${config.backendUrl}/api/v1/beasty/check`, {
-        method: "GET",  
-        headers: { 
-            Authorization: `Bearer ${token}`,  
-            'Accept': 'application/json'      
-        },
-        signal: controller.signal  
-    })
-    .then(async (beResponse) => {
-        // Clear timeout since we got a response
-        clearTimeout(timeout);
-        
-        if (!beResponse.ok) {
-            throw new Error('You have already used your one-time Beasty GET request.');
+            // Make request to backend to verify the token (yes this happens everytime for the sake of auth duh, well its imp so...)
+            fetch(`${config.backendUrl}/api/v1/beasty/check`, {
+                method: "GET",  
+                headers: { 
+                    Authorization: `Bearer ${token}`,  
+                    'Accept': 'application/json'      
+                },
+                signal: controller.signal  
+            })
+            .then(async (beResponse) => {
+                // Clear timeout since we got a response
+                clearTimeout(timeout);
+                
+                if (!beResponse.ok) {
+                    throw new Error('You have already used your one-time Beasty GET request.');
+                }
+
+                const beData = await beResponse.json();
+                // if token is good
+                const body = JSON.stringify({ 
+                    message: "hello user",
+                    userId: beData.data?.userId || null
+                });
+                
+                const response = [
+                    "HTTP/1.1 200 OK",
+                    "Content-Type: application/json",
+                    ...corsHeaders,
+                    ...securityHeaders,
+                    `Content-Length: ${Buffer.byteLength(body)}`,
+                    "",
+                    body
+                ].join("\r\n");
+                l.write(response);
+                l.end();
+            })
+            .catch((err) => {
+                clearTimeout(timeout);
+                const body = JSON.stringify({ 
+                    error: "Beasty Error", 
+                    details: err.message 
+                });
+                
+                const response = [
+                    "HTTP/1.1 401 Unauthorized",
+                    "Content-Type: application/json",
+                    ...corsHeaders,
+                    ...securityHeaders,
+                    `Content-Length: ${Buffer.byteLength(body)}`,
+                    "",
+                    body
+                ].join("\r\n");
+                
+                // Write response and properly close the socket
+                l.write(response, () => {
+                    l.destroy();
+                });
+            });
+            return;
         }
-
-        const beData = await beResponse.json();
-        // if token is good
-        const body = JSON.stringify({ 
-            message: "hello user",
-            userId: beData.data?.userId || null
-        });
-        
-        const response = [
-            "HTTP/1.1 200 OK",
-            "Content-Type: application/json",
-            ...corsHeaders,
-            ...securityHeaders,
-            `Content-Length: ${Buffer.byteLength(body)}`,
-            "",
-            body
-        ].join("\r\n");
-        l.write(response);
-        l.end();
-    })
-    .catch((err) => {
-        clearTimeout(timeout);
-        const body = JSON.stringify({ 
-            error: "Beasty Error", 
-            details: err.message 
-        });
-        
-        const response = [
-            "HTTP/1.1 401 Unauthorized",
-            "Content-Type: application/json",
-            ...corsHeaders,
-            ...securityHeaders,
-            `Content-Length: ${Buffer.byteLength(body)}`,
-            "",
-            body
-        ].join("\r\n");
-        
-        // Write response and end connection properly
-        l.write(response, () => {
-            l.end();
-        });
-    });
-    return;
-}
 
 
 // actual endpoint hitting starts here, w a user asking for magic basically lol
-// Handle /beasty route
-if (i.startsWith("/beasty")) {
-  // extracts authorization header from the incoming request lines
-  const authLine = f.find(line => line.toLowerCase().startsWith("authorization:"));
-  const token = authLine ? authLine.split(" ")[2] : null;       // and give null if not get token
-         
+         // Handle /beasty route
+    if (i.startsWith("/beasty")) {
+      // extracts authorization header from the incoming request lines
+      const authLine = f.find(line => line.toLowerCase().startsWith("authorization:"));
+      const token = authLine ? authLine.split(" ")[2] : null;       // and give null if not get token
+             
 if (!token) {
     const body = JSON.stringify({ 
         error: "Authorization token missing" 
@@ -358,29 +339,29 @@ const timeout = setTimeout(() => controller.abort(), config.timeout);
 // Make request to backend server, the client is beast(the-http-server) it self, lesssgoooo
 fetch(`${config.backendUrl}/api/v1/beasty/check`, {
     method: "GET",
-    headers: { 
-        Authorization: `Bearer ${token}`,
-        'Accept': 'application/json'
-    },
+                headers: { 
+                    Authorization: `Bearer ${token}`,
+                    'Accept': 'application/json'
+                },
     signal: controller.signal
 })
 .then(async (beResponse) => {
     // Clear the timeout since we got a response
     clearTimeout(timeout);
     
-    // Check if response is JSON
-    const contentType = beResponse.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-        throw new Error(`Invalid response type from backend: ${contentType}`);
-    }
-    
-    // Convert backend response to JSON
+                // Check if response is JSON
+                const contentType = beResponse.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error(`Invalid response type from backend: ${contentType}`);
+                }
+                
+                // Convert backend response to JSON
     const beData = await beResponse.json();
-    
-    // Validate the response structure
-    if (!beData || typeof beData !== 'object') {
-        throw new Error('Invalid response format from backend');        // backend can sometimes send HTML in place of json and hats bad
-    }
+                
+                // Validate the response structure
+                if (!beData || typeof beData !== 'object') {
+                    throw new Error('Invalid response format from backend');        // backend can sometimes send HTML in place of json and hats bad
+                }
     
     // Calculate how long the server has been running, beasty the mathematician
     const beastyUptimeSeconds = Math.floor(
@@ -443,12 +424,11 @@ fetch(`${config.backendUrl}/api/v1/beasty/check`, {
                 }
                 l.end();
             })
-            
             .catch((err) => {
                 clearTimeout(timeout);
                 const body = JSON.stringify({ 
                     error: "Beasty Error", 
-                    details: "You have used all 3 of your allowed Beasty requests." 
+                    details: "You have used all 4 of your allowed Beasty requests." 
                 });
                 
                 const response = [
@@ -463,7 +443,7 @@ fetch(`${config.backendUrl}/api/v1/beasty/check`, {
                 
                 // Write response and end connection properly
                 l.write(response, () => {
-                    l.end();
+                l.end();
                 });
             });
             return;

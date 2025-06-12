@@ -29,8 +29,8 @@ const beastyCheckController = asyncHandler(async (req, res) => {
   }
 
   // Check if user has exceeded their 3 requests
-  if (user.requestCount >= 3) {
-    throw new ApiError(403, "You have used all 3 of your allowed Beasty requests.");
+  if (user.requestCount >= 4) {
+    throw new ApiError(403, "You have used all 4 of your allowed Beasty requests.");
   }
 
   // Increment request count        // smarty
@@ -42,7 +42,7 @@ const beastyCheckController = asyncHandler(async (req, res) => {
       userId: user._id,
       firstRequestAt: user.firstRequestAt,
       requestCount: user.requestCount,
-      remainingRequests: 3 - user.requestCount
+      remainingRequests: 4 - user.requestCount
     }, "Access granted for Beasty GET")
   );
 });

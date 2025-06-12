@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/NewSmoke38/beasty-the-http-server#readme",
   "dependencies": {
+    "jsonwebtoken": "^9.0.2",
     "node-fetch": "^3.3.2"
   }
 }

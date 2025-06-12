@@ -17,7 +17,7 @@ export const config = {
         windowMs: 5 * 60 * 1000,
 
         // Maximum number of requests allowed per IP in the time window
-        max: 3
+        max: 4
     },
 
     // How long to wait for a response before timing out (5 seconds)

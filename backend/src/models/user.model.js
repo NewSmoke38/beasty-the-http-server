@@ -12,7 +12,7 @@ const userSchema = new Schema(
         trim: true,
         index: true,
         minlength: 1,
-        maxlength: 10
+        maxlength: 15
     },
     email: {
         type: String,
@@ -34,7 +34,7 @@ const userSchema = new Schema(
       trim: true,           
       index: true,
       minlength: 1,
-      maxlength: 30
+      maxlength: 15
     },
     refreshToken: {
       type: String,
