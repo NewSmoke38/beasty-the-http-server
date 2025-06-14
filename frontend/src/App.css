@@ -1,0 +1,520 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* Reset and base styles */
+body, html, #root, .binsider-bg {
+  background: #181c20;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  font-family: 'Fira Mono', 'JetBrains Mono', 'Cascadia Mono', 'Consolas', 'Menlo', monospace;
+  color: #e0e0e0;
+}
+
+.binsider-bg {
+  width: 100vw;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.binsider-topbar {
+  width: 100vw;
+  background: #181c20;
+  color: #b7c9ce;
+  font-size: 1.08rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border-bottom: 2px solid #222;
+  padding: 0.7rem 0 0.7rem 0;
+  box-sizing: border-box;
+  letter-spacing: 0.5px;
+}
+.binsider-tabs {
+  margin-left: 2.5rem;
+  display: flex;
+  gap: 1.2rem;
+}
+.binsider-tab {
+  color: #7ed6df;
+  opacity: 0.7;
+  cursor: pointer;
+  font-weight: 500;
+  padding: 0 0.2rem;
+  transition: color 0.2s, opacity 0.2s;
+}
+.binsider-tab-active {
+  color: #fff;
+  opacity: 1;
+  border-bottom: 2px solid #7ed6df;
+  font-weight: bold;
+}
+.binsider-title-version {
+  margin-left: 1.5rem;
+  color: #b7c9ce;
+  font-size: 1.02rem;
+  opacity: 0.7;
+  flex: 1;
+}
+.binsider-path {
+  margin-right: 2.5rem;
+  color: #b7c9ce;
+  font-size: 1.02rem;
+  opacity: 0.7;
+}
+
+.binsider-mainbox {
+  margin-top: 2.5rem;
+  background: #181c20;
+  border: 2px solid #444;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1.5px #222, 0 2px 24px #000a;
+  min-width: 800px;
+  max-width: 900px;
+  padding: 2.5rem 2.5rem 1.5rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.binsider-center-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2.5rem;
+}
+.binsider-logo {
+  font-size: 3.2rem;
+  font-weight: bold;
+  color: #fff;
+  letter-spacing: 2px;
+  margin-bottom: 1.3rem;
+  font-family: 'Fira Mono', 'JetBrains Mono', monospace;
+}
+.binsider-dot {
+  color: #b7c9ce;
+}
+.binsider-desc {
+  font-size: 1.25rem;
+  color: #b7c9ce;
+  margin-bottom: 0.7rem;
+  text-align: center;
+}
+.binsider-desc-secondary {
+  text-align: center;
+  font-size: 1.08rem;
+  color: #b0b0b0;
+  margin-top: 0.1rem;
+  margin-bottom: 0.7rem;
+}
+.binsider-italic {
+  color: #f6c177;
+  font-style: italic;
+}
+.binsider-link {
+  color: #7ed6df;
+  font-size: 1.08rem;
+  margin-bottom: 0.2rem;
+}
+.binsider-by {
+  display: none !important;
+}
+.binsider-heart {
+  color: #ff4b6e;
+  font-size: 1.1em;
+  vertical-align: middle;
+}
+.binsider-author {
+  color: #7ecfff;
+  font-weight: bold;
+  font-family: inherit;
+}
+
+.binsider-info-box {
+  display: flex;
+  flex-direction: row;
+  gap: 2.5rem;
+  margin-bottom: 2.2rem;
+  margin-top: 1.2rem;
+}
+.binsider-file-info {
+  background: #181c20;
+  border: 1.5px solid #444;
+  border-radius: 6px;
+  padding: 1.2rem 2.2rem 1.2rem 1.2rem;
+  min-width: 180px;
+  color: #e0e0e0;
+  font-size: 1.08rem;
+  box-shadow: 0 0 0 1px #222;
+}
+.binsider-file {
+  color: #7ed6df;
+}
+.binsider-deps-box {
+  background: #181c20;
+  border: 1.5px solid #444;
+  border-radius: 6px;
+  padding: 1.2rem 2.2rem 1.2rem 1.2rem;
+  min-width: 320px;
+  color: #e0e0e0;
+  font-size: 1.08rem;
+  box-shadow: 0 0 0 1px #222;
+}
+.binsider-deps-title {
+  color: #b7c9ce;
+  font-weight: bold;
+  margin-bottom: 0.7rem;
+  font-size: 1.1rem;
+}
+.binsider-deps-table {
+  width: 100%;
+  margin-top: 0.2rem;
+}
+.binsider-deps-header {
+  display: flex;
+  justify-content: space-between;
+  color: #b7c9ce;
+  font-size: 1.05rem;
+  font-weight: bold;
+  margin-bottom: 0.2rem;
+}
+.binsider-deps-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.05rem;
+  margin-bottom: 0.1rem;
+}
+.binsider-dep-green {
+  color: #a3be8c;
+}
+
+.binsider-footer-nav {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 1.2rem;
+  margin-top: 1.5rem;
+  font-size: 1.08rem;
+  color: #b7c9ce;
+  font-family: 'Fira Mono', 'JetBrains Mono', monospace;
+}
+.binsider-footer-hint {
+  color: #b7c9ce;
+  font-weight: 500;
+  margin: 0 0.1rem;
+}
+.binsider-footer-orange {
+  color: #f6c177;
+}
+.binsider-footer-yellow {
+  color: #e5c07b;
+}
+.binsider-footer-red {
+  color: #f67280;
+}
+
+.binsider-auth-btns {
+  margin-right: 2.5rem;
+  display: flex;
+  gap: 0.7rem;
+}
+.binsider-btn {
+  background: #23272e;
+  color: #b7c9ce;
+  border: 1.5px solid #444;
+  border-radius: 5px;
+  font-size: 1.02rem;
+  font-family: inherit;
+  font-weight: 600;
+  padding: 0.35rem 1.1rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+.binsider-btn:hover {
+  background: #444;
+  color: #fff;
+  border: 1.5px solid #7ed6df;
+}
+
+.binsider-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(24,28,32,0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.binsider-modal-content {
+  background: #181c20;
+  border: 2px solid #444;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1.5px #222, 0 2px 24px #000a;
+  min-width: 260px;
+  max-width: 340px;
+  padding: 2.2rem 2.7rem 2rem 2.7rem;
+  position: relative;
+  font-family: inherit;
+}
+.binsider-modal-close {
+  position: absolute;
+  top: 0.7rem;
+  right: 1.2rem;
+  font-size: 2.2rem;
+  color: #f67280;
+  cursor: pointer;
+}
+.binsider-modal-content h2 {
+  color: #7ed6df;
+  font-size: 1.3rem;
+  margin-bottom: 1.2rem;
+  text-align: center;
+}
+.binsider-input {
+  width: 100%;
+  margin-bottom: 1.1rem;
+  padding: 0.7rem;
+  border-radius: 5px;
+  border: 2px solid #444;
+  background: #101010;
+  color: #e0e0e0;
+  font-size: 1.05rem;
+  font-family: inherit;
+}
+
+@font-face {
+  font-family: 'Pixelleteth';
+  src: url('/fonts/Pixelleteth.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.pixel-font {
+  font-family: 'Pixelleteth', 'Press Start 2P', 'VT323', 'Pixel Operator', monospace !important;
+  letter-spacing: 2px;
+  font-size: 2.2rem;
+  text-transform: lowercase;
+}
+
+.pixel-logo-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 1.2rem;
+}
+.pixel-letter {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pixel-row {
+  display: flex;
+  gap: 2px;
+}
+.pixel-block {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background: #111;
+  border-radius: 2px;
+}
+.pixel-empty {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background: transparent;
+}
+
+.binsider-info-merged-box {
+  background: #181c20;
+  border: 1.5px solid #444;
+  border-radius: 6px;
+  padding: 1.2rem 2.2rem 1.2rem 1.2rem;
+  margin-bottom: 2.2rem;
+  margin-top: 1.2rem;
+  color: #e0e0e0;
+  font-size: 1.08rem;
+  box-shadow: 0 0 0 1px #222;
+  display: flex;
+  flex-direction: row;
+  gap: 2.5rem;
+}
+.binsider-info-merged-box .binsider-file-info,
+.binsider-info-merged-box .binsider-deps-box {
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  min-width: unset;
+}
+
+/* Custom Dropdown Styles */
+.custom-dropdown-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 1rem auto;
+  position: relative;
+  font-family: 'PixelOperator', 'Fira Mono', 'Menlo', monospace;
+}
+
+.custom-dropdown-header {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  color: #7ecfff;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.custom-dropdown-header:hover {
+  border-color: #7ecfff;
+}
+
+.custom-dropdown-arrow {
+  font-size: 0.8rem;
+  transition: transform 0.2s ease;
+}
+
+.custom-dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.custom-dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-top: none;
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.custom-dropdown-item {
+  padding: 0.5rem 1rem;
+  color: #7ecfff;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.custom-dropdown-item:hover {
+  background: #2a2a2a;
+}
+
+.custom-dropdown-item.selected {
+  background: #2a2a2a;
+  color: #fff;
+}
+
+/* Remove old select styles */
+.beasty-http-input {
+  display: none;
+}
+
+.beasty-http-input:focus {
+  outline: none;
+  border-color: #7ecfff;
+  box-shadow: 0 0 0 1px #7ecfff;
+}
+
+.beasty-http-input option {
+  background: #1a1a1a;
+  color: #7ecfff;
+  font-family: 'PixelOperator', 'Fira Mono', 'Menlo', monospace;
+  padding: 0.5rem;
+}
+
+/* Hide the default dropdown arrow in IE */
+.beasty-http-input::-ms-expand {
+  display: none;
+}
+
+.terminal-box {
+  background: #181c20;
+  border: 1.5px solid #444;
+  border-radius: 6px;
+  padding: 1.2rem 2.2rem 1.2rem 1.2rem;
+  width: 100%;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 2.2rem;
+  margin-top: 1.2rem;
+  color: #e0e0e0;
+  font-size: 1.08rem;
+  box-shadow: 0 0 0 1px #222;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-family: 'Fira Mono', 'JetBrains Mono', monospace;
+}
+.terminal-line {
+  font-size: 1.08rem;
+  margin-bottom: 0.5rem;
+  font-family: inherit;
+}
+.terminal-user {
+  color: #7ed6df;
+  font-weight: bold;
+}
+.terminal-path {
+  color: #e5c07b;
+  font-weight: bold;
+  margin-left: 0.2rem;
+}
+.terminal-cursor-line {
+  display: flex;
+  align-items: center;
+  height: 1.2em;
+  margin-top: 0.7rem;
+}
+.terminal-cursor {
+  display: inline-block;
+  width: 6px;
+  height: 1.1em;
+  background: #e0e0e0;
+  margin-left: 0.2rem;
+  animation: blink-cursor 1s steps(1) infinite;
+}
+@keyframes blink-cursor {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.beasty-info-blue {
+  background: #1e2a3a;
+  color: #7ed6df;
+  text-align: center;
+  font-size: 1.08rem;
+  padding: 0.5rem 1.2rem;
+  border-radius: 5px;
+  margin: 0.7rem 0 0.7rem 0;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.beasty-footer-love {
+  width: 100vw;
+  text-align: center;
+  position: fixed;
+  left: 0;
+  bottom: 10px;
+  font-family: 'PixelOperator', 'Fira Mono', 'Menlo', monospace;
+  font-size: 1rem;
+  color: #6c7a89;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+  z-index: 100;
+  pointer-events: none;
+}
