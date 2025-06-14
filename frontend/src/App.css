@@ -26,7 +26,7 @@ body, html, #root, .binsider-bg {
   font-size: 1.08rem;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
   border-bottom: 2px solid #222;
   padding: 0.7rem 0 0.7rem 0;
   box-sizing: border-box;
@@ -247,6 +247,7 @@ body, html, #root, .binsider-bg {
   justify-content: center;
   z-index: 1000;
 }
+
 .binsider-modal-content {
   background: #181c20;
   border: 2px solid #444;
@@ -257,21 +258,26 @@ body, html, #root, .binsider-bg {
   padding: 2.2rem 2.7rem 2rem 2.7rem;
   position: relative;
   font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-.binsider-modal-close {
-  position: absolute;
-  top: 0.7rem;
-  right: 1.2rem;
-  font-size: 2.2rem;
-  color: #f67280;
-  cursor: pointer;
-}
+
 .binsider-modal-content h2 {
   color: #7ed6df;
   font-size: 1.3rem;
   margin-bottom: 1.2rem;
   text-align: center;
+  width: 100%;
 }
+
+.binsider-modal-content form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .binsider-input {
   width: 100%;
   margin-bottom: 1.1rem;
@@ -282,6 +288,18 @@ body, html, #root, .binsider-bg {
   color: #e0e0e0;
   font-size: 1.05rem;
   font-family: inherit;
+  text-align: center;
+}
+
+.binsider-input:focus {
+  outline: none;
+  border-color: #7ed6df;
+}
+
+.binsider-modal-content .binsider-btn {
+  margin-top: 0.5rem;
+  width: 100%;
+  text-align: center;
 }
 
 @font-face {
@@ -352,20 +370,20 @@ body, html, #root, .binsider-bg {
   min-width: unset;
 }
 
-/* Custom Dropdown Styles */
+/* Custom Dropdown */
 .custom-dropdown-container {
   width: 100%;
-  max-width: 800px;
-  margin: 1rem auto;
   position: relative;
-  font-family: 'PixelOperator', 'Fira Mono', 'Menlo', monospace;
+  font-family: inherit;
+  margin: 1.2rem 0;
+  box-sizing: border-box;
 }
 
 .custom-dropdown-header {
   width: 100%;
   padding: 0.5rem 1rem;
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
+  background: #181c20;
+  border: 1.5px solid #444;
   color: #7ecfff;
   cursor: pointer;
   display: flex;
@@ -373,6 +391,7 @@ body, html, #root, .binsider-bg {
   align-items: center;
   font-size: 0.9rem;
   transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .custom-dropdown-header:hover {
@@ -440,17 +459,14 @@ body, html, #root, .binsider-bg {
   display: none;
 }
 
+/* Terminal box */
 .terminal-box {
   background: #181c20;
   border: 1.5px solid #444;
   border-radius: 6px;
   padding: 1.2rem 2.2rem 1.2rem 1.2rem;
   width: 100%;
-  max-width: 800px;
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: 2.2rem;
-  margin-top: 1.2rem;
+  margin: 1.2rem 0;
   color: #e0e0e0;
   font-size: 1.08rem;
   box-shadow: 0 0 0 1px #222;
@@ -458,6 +474,7 @@ body, html, #root, .binsider-bg {
   flex-direction: column;
   gap: 0.5rem;
   font-family: 'Fira Mono', 'JetBrains Mono', monospace;
+  box-sizing: border-box;
 }
 .terminal-line {
   font-size: 1.08rem;
@@ -517,4 +534,41 @@ body, html, #root, .binsider-bg {
   opacity: 0.85;
   z-index: 100;
   pointer-events: none;
+}
+
+.binsider-doc-link {
+  color: #ff4b6e;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.binsider-doc-link:hover {
+  opacity: 0.8;
+}
+
+.binsider-send-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  transition: opacity 0.2s;
+  margin: 0;
+  line-height: 1;
+}
+
+.binsider-send-btn:hover {
+  opacity: 0.8;
+}
+
+.binsider-send-btn:active {
+  opacity: 0.6;
+}
+
+.beasty-dot {
+  color: #ff4b6e;
 }

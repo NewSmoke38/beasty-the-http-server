@@ -38,7 +38,6 @@ function App() {
           <span className="binsider-tab">Logs</span>
           <span className="binsider-tab">Lore</span>
         </span>
-        <span className="binsider-title-version">0.1.0</span>
         <span className="binsider-auth-btns">
           <button className="binsider-btn" onClick={() => setShowRegister(true)}>Register</button>
           <button className="binsider-btn" onClick={() => setShowLogin(true)}>Login</button>
@@ -47,8 +46,10 @@ function App() {
       {/* Main content */}
       <div className="binsider-mainbox">
         <div className="binsider-center-content">
-          <div className="binsider-logo pixel-font">beasty<span className="binsider-dot">.</span></div>
-          <div className="binsider-desc">An HTTP server built from scratch.</div>
+          <div className="binsider-logo pixel-font">
+            beasty<span className="beasty-dot">.</span>
+          </div>
+          <div className="binsider-desc">A HTTP server built from scratch.</div>
           <div className="binsider-desc binsider-desc-secondary">No frameworks. No shortcuts. Just raw code.</div>
           <div className="beasty-info-blue">You can only make 4 requests. Use them wisely.</div>
         </div>
@@ -87,11 +88,10 @@ function App() {
         </div>
         {/* Footer navigation hints */}
         <div className="binsider-footer-nav">
-          <span className="binsider-footer-hint binsider-footer-orange">[Enter→</span>Analyze library<span className="binsider-footer-hint">]</span>
-          <span className="binsider-footer-hint">[o→</span>Open Documentation<span className="binsider-footer-hint">]</span>
-          <span className="binsider-footer-hint">[Tab→</span>Next<span className="binsider-footer-hint">]</span>
-          <span className="binsider-footer-hint binsider-footer-yellow">[Bksp→</span>Back<span className="binsider-footer-hint">]</span>
-          <span className="binsider-footer-hint binsider-footer-red">[q→</span>Quit<span className="binsider-footer-hint">]</span>
+          <button className="binsider-send-btn" onClick={() => console.log('Sending request:', httpOption)}>
+            <span className="binsider-footer-hint binsider-footer-orange">[Enter→</span>Send<span className="binsider-footer-hint">]</span>
+          </button>
+          <span className="binsider-footer-hint">[Open→</span><a href="/docs" className="binsider-doc-link">Documentation</a><span className="binsider-footer-hint">]</span>
         </div>
       </div>
       {/* Modals for Register and Login */}
