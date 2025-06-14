@@ -13,7 +13,7 @@ export const config = {
     // Rate limiting settings from IP
     rateLimit: {
         // 3 minutes in milliseconds (3 * 60 * 1000)
-        // This is how long we track request counts for each IP
+        // This is how long we track requests from each IP
         windowMs: 3 * 60 * 1000,
 
         // Maximum number of requests allowed per IP in the time window
@@ -22,6 +22,7 @@ export const config = {
 
     // How long to wait for a response before timing out (5 seconds)
     timeout: 5000,
+
 
     // Gzip compression settings
     compression: {
@@ -35,24 +36,23 @@ export const config = {
         level: 6
     },
 
+
     // IP Access Control
     ipAccess: {
-        // List of trusted IPs that bypass rate limiting
+        // list of trusted IPs that bypass rate limiting - vvip treatment
         whitelist: [],
         
-        // List of blocked IPs
+        // list of blocked IPs - bad ones 
         blacklist: [],
         
-        // Whether to enable IP access control
         enabled: true
     },
 
     // Request throttling
     throttling: {
-        // Minimum time (in milliseconds) between requests from the same IP
+        // min time (in milliseconds) between requests from the same IP
         minTimeBetweenRequests: 1000,  // 1 second
         
-        // Whether throttling is enabled
         enabled: true
     }
 };

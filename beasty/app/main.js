@@ -163,25 +163,23 @@ const server = net.createServer((l) => {
         }
 
         // Check request throttling - this is different from rate limiting!
-        // Rate limiting counts total requests in a time window
-        // Throttling enforces minimum time between requests
+        // Rate limiting - You can make X requests per Y minutes
+        // Throttling - You must wait Z seconds between requests
         if (config.throttling.enabled) {
-            // Get the timestamp of the last request from this IP
-            // If no previous request, default to 0 (epoch time)
+            // get the timestamp of the last request from this IP
+            // if no previous request, default to 0 (epoch time) 
             const lastTime = lastRequestTime.get(ip) || 0;
             
-            // Calculate how many milliseconds have passed since last request
+            // Calculate how many milliseconds have passed since last request  // real work is done here and then calculated that if user can go further 
             const timeSinceLastRequest = Date.now() - lastTime;
             
             // If not enough time has passed since last request
             if (timeSinceLastRequest < config.throttling.minTimeBetweenRequests) {
-                // Create error message telling user how long to wait
                 const body = JSON.stringify({ 
                     error: "Too many requests",
                     details: `Please wait ${(config.throttling.minTimeBetweenRequests - timeSinceLastRequest) / 1000} seconds between requests`
                 });
                 
-                // Build HTTP response with 429 status code (Too Many Requests)
                 const response = [
                     "HTTP/1.1 429 Too Many Requests",
                     "Content-Type: application/json",
@@ -192,18 +190,17 @@ const server = net.createServer((l) => {
                     body
                 ].join("\r\n");
                 
-                // Send response and close connection
                 l.write(response, () => {
                     l.destroy();
                 });
                 return;
             }
             
-            // If request is allowed, update the timestamp for this IP
-            // This will be used to check the next request
             lastRequestTime.set(ip, Date.now());
         }
 
+
+        
         const f = b.toString().split("\r\n");      // convert b data coming from users in packets to string
         // f is an array tho
 
@@ -216,28 +213,6 @@ const server = net.createServer((l) => {
         // q = HTTP version (HTTP/1.1)
         const [j, rawPath, q] = f[0].split(" ");
 
-        // Validate HTTP method - only allow GET
-        if (j !== 'GET') {
-            const body = JSON.stringify({ 
-                error: "Method not allowed",
-                details: "Only GET requests are supported"
-            });
-            
-            const response = [
-                "HTTP/1.1 405 Method Not Allowed",
-                "Content-Type: application/json",
-                ...corsHeaders,
-                ...securityHeaders,
-                `Content-Length: ${Buffer.byteLength(body)}`,
-                "",
-                body
-            ].join("\r\n");
-            
-            l.write(response, () => {
-                l.destroy();
-            });
-            return;
-        }
 
         // sanitize the path and query parameters
         const [path, queryString] = rawPath.split('?');
