@@ -10,11 +10,11 @@ if (!fs.existsSync(logsDir)) {
 function logRequest(ip, method, requestPath, statusCode, userAgent, timestamp) {
     const logEntry = {
         timestamp: timestamp || new Date().toISOString(),
-        ip,
         method,
         path: requestPath,
         statusCode,
         userAgent
+        // IP address removed for privacy
     };
 
     // Log file name based on date (e.g., 2024-03-14.log)
