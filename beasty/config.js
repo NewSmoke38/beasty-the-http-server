@@ -33,5 +33,17 @@ export const config = {
         // 9 = slowest but best compression
         // 6 is a good balance
         level: 6
+    },
+
+    // IP Access Control
+    ipAccess: {
+        // List of trusted IPs that bypass rate limiting
+        whitelist: [],
+        
+        // List of blocked IPs
+        blacklist: [],
+        
+        // Whether to enable IP access control
+        enabled: true
     }
 };

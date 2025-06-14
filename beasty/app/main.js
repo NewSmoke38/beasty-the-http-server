@@ -8,29 +8,29 @@ console.log("Logs from your program will appear here!");
 
 // Input sanitization functions
 function sanitizePath(path) {
-    // Remove any double slashes
+    // remove any double slashes (real good)
     path = path.replace(/\/+/g, '/');
     
-    // Remove any potentially dangerous characters
+    // remove any potentially dangerous characters (real good)
     path = path.replace(/[^a-zA-Z0-9\/\?=&-]/g, '');
     
-    // Ensure path starts with a single slash
+    // ensure path starts with a single slash
     path = path.startsWith('/') ? path : '/' + path;
     
     return path;
 }
 
 function sanitizeToken(token) {
-    // Remove any non-alphanumeric characters except dots and dashes
+    // remove any non-alphanumeric characters except dots and dashes (this really is good)
     return token.replace(/[^a-zA-Z0-9\.-]/g, '');
 }
 
 function sanitizeQueryParams(queryString) {
-    // Only allow specific query parameters
+    // only allow specific query parameters - we have only one for IP
     const allowedParams = ['withIP'];
     const params = new URLSearchParams(queryString);
     
-    // Filter out any parameters not in allowedParams
+    // filter out any parameters not in allowedParams
     for (const key of params.keys()) {
         if (!allowedParams.includes(key)) {
             params.delete(key);
@@ -104,52 +104,94 @@ process.on('SIGTERM', () => {
 });
 
 
+
+
 global.beastyStartTime = Date.now();        // shows server up time of beasty
 
 
 
-
-
+// beasty making startsss
 // Create a new TCP server using Node's net module
 // 'l' is the socket connection for each client
 const server = net.createServer((l) => {
-    // data is received from the client in form of 'b' = is the raw buffer data incoming
     l.on("data", (b) => {
         const ip = l.remoteAddress;
-        const f = b.toString().split("\r\n");
-        const userAgent = extractUserAgent(f);
         
-        // check if IP is blocked first, before any other processing
-        if (ipBlockList.has(ip)) {
-            const blockData = ipBlockList.get(ip);
-            if (blockData.blockedUntil > Date.now()) {
-                // just destroy the connection without any response
-                l.destroy();
+        // small thingy done for whitlisting and blacklisting IPs for the sake of beasty!! 
+        // Check if IP access control is enabled
+        if (config.ipAccess.enabled) {
+            // Check blacklist first
+            if (config.ipAccess.blacklist.includes(ip)) {
+                const body = JSON.stringify({ 
+                    error: "Access denied",
+                    details: "Your IP has been blocked"
+                });
+                
+                const response = [
+                    "HTTP/1.1 403 Forbidden",
+                    "Content-Type: application/json",
+                    ...corsHeaders,
+                    ...securityHeaders,
+                    `Content-Length: ${Buffer.byteLength(body)}`,
+                    "",
+                    body
+                ].join("\r\n");
+                
+                l.write(response, () => {
+                    l.destroy();
+                });
                 return;
+            }
+            
+            // If IP is whitelisted, bypass rate limiting - hehe moment
+            if (config.ipAccess.whitelist.includes(ip)) {
+                // skip rate limiting checks - vip has come 
+                // Continue with request processing
             } else {
-                ipBlockList.delete(ip);
+                // Check rate limiting for non-whitelisted IPs
+                if (ipBlockList.has(ip)) {
+                    const blockData = ipBlockList.get(ip);
+                    if (blockData.blockedUntil > Date.now()) {
+                        l.destroy();
+                        return;
+                    } else {
+                        ipBlockList.delete(ip);
+                    }
+                }
             }
         }
 
-        const [j, rawPath, q] = f[0].split(" ");
-        
-        // Sanitize the path and query parameters
+const f = b.toString().split("\r\n");      // convert b data coming from users in packets to string
+ // f is an array tho
+
+// extract the User-Agent header from the req headers - tells us what browser/client is making the request, although for now it always will be curl cause we only allow it
+const userAgent = extractUserAgent(f);
+
+// parse the first line of the HTTP request which contains-
+// j = HTTP method (GET, POST, etc.)
+// rawPath = the requested path (/beasty, /echo, etc.)
+// q = HTTP version (HTTP/1.1)
+const [j, rawPath, q] = f[0].split(" ");
+
+
+        // sanitize the path and query parameters
         const [path, queryString] = rawPath.split('?');
         const sanitizedPath = sanitizePath(path);
         const sanitizedQuery = queryString ? sanitizeQueryParams(queryString) : '';
         const i = sanitizedQuery ? `${sanitizedPath}?${sanitizedQuery}` : sanitizedPath;
 
-        // Add logging for each response
+        // just some dev stuff
+        // adding logging for each response
         const originalWrite = l.write;
         l.write = function(data) {
-            // Extract status code from response
+            // extract status code from response
             const statusLine = data.toString().split('\r\n')[0];
             const statusCode = statusLine.split(' ')[1];
             
             // Log the request
             logRequest(ip, j, i, statusCode, userAgent);
             
-            // Call original write function
+            // call original write function
             return originalWrite.apply(this, arguments);
         };
 
@@ -157,21 +199,20 @@ const server = net.createServer((l) => {
         // Get current timestamp
         const now = Date.now();
         
-        // Get existing request count for this IP or create new if none exists
-        // If no entry exists, create one with count 0 and current timestamp
+        // get existing request count for this IP or create new if none exists
         const userRequests = requestCounts.get(ip) || { count: 0, timestamp: now };
         
-        // Check if it's been more than the rate limit window (15 minutes)
+        // check if it's been more than the rate limit window (15 minutes)
         if (now - userRequests.timestamp > config.rateLimit.windowMs) {
-            // If yes, reset the count to 1 and update timestamp
+            // if yes, reset the count to 1 and update timestamp
             userRequests.count = 1;
             userRequests.timestamp = now;
         } else {
-            // If no, increment the count
+            // if no, increment the count, this happens always ig, like whose gonna wait to make req dude
             userRequests.count++;
         }
         
-        // Save the updated request count back to our Map
+        // save the updated request count back to our Map
         requestCounts.set(ip, userRequests);
         
         // When rate limit is exceeded (5th request)
@@ -182,7 +223,7 @@ const server = net.createServer((l) => {
                 violations: (ipBlockList.get(ip)?.violations || 0) + 1
             });
 
-            // Send the "all requests used" message for the 5th attempt
+            // Send the "all requests used" message for the 5th attempt  // this thing iss really good
             const body = JSON.stringify({ 
                 error: "Rate limit exceeded",
                 details: "You have used all 4 of your allowed Beasty requests."
