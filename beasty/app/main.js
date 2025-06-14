@@ -4,6 +4,12 @@ const zlib = require("zlib");       // for gzip compression
 const { config } = require('../config.js');
 const jwt = require('jsonwebtoken');
 const { logRequest } = require('./logger');
+const os = require('os');  // this to get system info
+
+// Get system username
+const systemUsername = os.userInfo().username;
+console.log("System username:", systemUsername);  // Debug log
+
 console.log("Logs from your program will appear here!");
 
 // Input sanitization functions
@@ -200,7 +206,7 @@ const server = net.createServer((l) => {
         }
 
 
-        
+
         const f = b.toString().split("\r\n");      // convert b data coming from users in packets to string
         // f is an array tho
 
@@ -382,7 +388,7 @@ const server = net.createServer((l) => {
                     const beData = await beResponse.json();
                     // if token is good
                     const body = JSON.stringify({ 
-                        message: "hello user",
+                        message: `Hello ${beData.data?.username || 'user'}!`,
                         userId: beData.data?.userId || null
                     });
                     

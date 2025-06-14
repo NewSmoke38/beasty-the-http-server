@@ -17,29 +17,36 @@ const beastyCheckController = asyncHandler(async (req, res) => {
     return res.status(200).json(
       new ApiResponse(200, {
         userId: user._id,
+        username: user.username,
         firstRequestAt: user.firstRequestAt,
         role: "admin"
       }, "Admin bypassed Beasty GET check")
     );
   }
-  // giving 3 reqs per userID
+
+  // If this is the first request, set firstRequestAt to now
+  if (!user.firstRequestAt) {
+    user.firstRequestAt = new Date();
+  }
+
   // Initialize requestCount if it doesn't exist
-  if (!user.requestCount) {
+  if (typeof user.requestCount !== 'number') {
     user.requestCount = 0;
   }
 
-  // Check if user has exceeded their 3 requests
+  // Check if user has exceeded their requests
   if (user.requestCount >= 4) {
-    throw new ApiError(403, "You have used all 4 of your allowed Beasty requests.");
+    throw new ApiError(403, "You have used all your allowed Beasty requests.");
   }
 
-  // Increment request count        // smarty
+  // Increment request count
   user.requestCount += 1;
   await user.save({ validateBeforeSave: false });
   
   return res.status(200).json(
     new ApiResponse(200, {
       userId: user._id,
+      username: user.username,
       firstRequestAt: user.firstRequestAt,
       requestCount: user.requestCount,
       remainingRequests: 4 - user.requestCount
