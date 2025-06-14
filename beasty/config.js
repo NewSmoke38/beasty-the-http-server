@@ -13,7 +13,7 @@ export const config = {
     // Rate limiting settings from IP
     rateLimit: {
         // 3 minutes in milliseconds (3 * 60 * 1000)
-        // This is how long we track requests from each IP
+        // This is how long we track request counts for each IP
         windowMs: 3 * 60 * 1000,
 
         // Maximum number of requests allowed per IP in the time window
@@ -44,6 +44,15 @@ export const config = {
         blacklist: [],
         
         // Whether to enable IP access control
+        enabled: true
+    },
+
+    // Request throttling
+    throttling: {
+        // Minimum time (in milliseconds) between requests from the same IP
+        minTimeBetweenRequests: 1000,  // 1 second
+        
+        // Whether throttling is enabled
         enabled: true
     }
 };

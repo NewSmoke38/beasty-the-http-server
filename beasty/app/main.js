@@ -72,6 +72,7 @@ const securityHeaders = [
 // Create a Map(it is better here in this case) to store request counts for each IP address
 const requestCounts = new Map();
 const ipBlockList = new Map();  // Add this line for IP blocking
+const lastRequestTime = new Map();  // add this for request throttling (that a user can make x reqs with a time btw every req which we.ve set to 1 sec, diff from rate limiting tho)
 
 // Set up a cleanup interval that runs every 60 seconds (60000 milliseconds)
 const cleanupInterval = setInterval(() => {
@@ -161,18 +162,82 @@ const server = net.createServer((l) => {
             }
         }
 
-const f = b.toString().split("\r\n");      // convert b data coming from users in packets to string
- // f is an array tho
+        // Check request throttling - this is different from rate limiting!
+        // Rate limiting counts total requests in a time window
+        // Throttling enforces minimum time between requests
+        if (config.throttling.enabled) {
+            // Get the timestamp of the last request from this IP
+            // If no previous request, default to 0 (epoch time)
+            const lastTime = lastRequestTime.get(ip) || 0;
+            
+            // Calculate how many milliseconds have passed since last request
+            const timeSinceLastRequest = Date.now() - lastTime;
+            
+            // If not enough time has passed since last request
+            if (timeSinceLastRequest < config.throttling.minTimeBetweenRequests) {
+                // Create error message telling user how long to wait
+                const body = JSON.stringify({ 
+                    error: "Too many requests",
+                    details: `Please wait ${(config.throttling.minTimeBetweenRequests - timeSinceLastRequest) / 1000} seconds between requests`
+                });
+                
+                // Build HTTP response with 429 status code (Too Many Requests)
+                const response = [
+                    "HTTP/1.1 429 Too Many Requests",
+                    "Content-Type: application/json",
+                    ...corsHeaders,
+                    ...securityHeaders,
+                    `Content-Length: ${Buffer.byteLength(body)}`,
+                    "",
+                    body
+                ].join("\r\n");
+                
+                // Send response and close connection
+                l.write(response, () => {
+                    l.destroy();
+                });
+                return;
+            }
+            
+            // If request is allowed, update the timestamp for this IP
+            // This will be used to check the next request
+            lastRequestTime.set(ip, Date.now());
+        }
 
-// extract the User-Agent header from the req headers - tells us what browser/client is making the request, although for now it always will be curl cause we only allow it
-const userAgent = extractUserAgent(f);
+        const f = b.toString().split("\r\n");      // convert b data coming from users in packets to string
+        // f is an array tho
 
-// parse the first line of the HTTP request which contains-
-// j = HTTP method (GET, POST, etc.)
-// rawPath = the requested path (/beasty, /echo, etc.)
-// q = HTTP version (HTTP/1.1)
-const [j, rawPath, q] = f[0].split(" ");
+        // extract the User-Agent header from the req headers - tells us what browser/client is making the request, although for now it always will be curl cause we only allow it
+        const userAgent = extractUserAgent(f);
 
+        // parse the first line of the HTTP request which contains-
+        // j = HTTP method (GET, POST, etc.)
+        // rawPath = the requested path (/beasty, /echo, etc.)
+        // q = HTTP version (HTTP/1.1)
+        const [j, rawPath, q] = f[0].split(" ");
+
+        // Validate HTTP method - only allow GET
+        if (j !== 'GET') {
+            const body = JSON.stringify({ 
+                error: "Method not allowed",
+                details: "Only GET requests are supported"
+            });
+            
+            const response = [
+                "HTTP/1.1 405 Method Not Allowed",
+                "Content-Type: application/json",
+                ...corsHeaders,
+                ...securityHeaders,
+                `Content-Length: ${Buffer.byteLength(body)}`,
+                "",
+                body
+            ].join("\r\n");
+            
+            l.write(response, () => {
+                l.destroy();
+            });
+            return;
+        }
 
         // sanitize the path and query parameters
         const [path, queryString] = rawPath.split('?');
