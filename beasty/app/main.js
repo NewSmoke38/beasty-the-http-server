@@ -3,7 +3,42 @@ const net = require("net");
 const zlib = require("zlib");       // for gzip compression
 const { config } = require('../config.js');
 const jwt = require('jsonwebtoken');
+const { logRequest } = require('./logger');
 console.log("Logs from your program will appear here!");
+
+// Input sanitization functions
+function sanitizePath(path) {
+    // Remove any double slashes
+    path = path.replace(/\/+/g, '/');
+    
+    // Remove any potentially dangerous characters
+    path = path.replace(/[^a-zA-Z0-9\/\?=&-]/g, '');
+    
+    // Ensure path starts with a single slash
+    path = path.startsWith('/') ? path : '/' + path;
+    
+    return path;
+}
+
+function sanitizeToken(token) {
+    // Remove any non-alphanumeric characters except dots and dashes
+    return token.replace(/[^a-zA-Z0-9\.-]/g, '');
+}
+
+function sanitizeQueryParams(queryString) {
+    // Only allow specific query parameters
+    const allowedParams = ['withIP'];
+    const params = new URLSearchParams(queryString);
+    
+    // Filter out any parameters not in allowedParams
+    for (const key of params.keys()) {
+        if (!allowedParams.includes(key)) {
+            params.delete(key);
+        }
+    }
+    
+    return params.toString();
+}
 
 // CORS headers
 const corsHeaders = [
@@ -81,6 +116,8 @@ const server = net.createServer((l) => {
     // data is received from the client in form of 'b' = is the raw buffer data incoming
     l.on("data", (b) => {
         const ip = l.remoteAddress;
+        const f = b.toString().split("\r\n");
+        const userAgent = extractUserAgent(f);
         
         // check if IP is blocked first, before any other processing
         if (ipBlockList.has(ip)) {
@@ -94,13 +131,28 @@ const server = net.createServer((l) => {
             }
         }
 
-        const f = b.toString().split("\r\n");   // b comes in packets so need to get converted into string
-        //  the first line of the HTTP request is split up into many strings from the one main string
-        // j = HTTP method (GET, POST, etc.)
-        // i = path (/beasty, /echo, etc.)
-        // q = HTTP version (HTTP/1.1)
-        const [j, i, q] = f[0].split(" ");
+        const [j, rawPath, q] = f[0].split(" ");
         
+        // Sanitize the path and query parameters
+        const [path, queryString] = rawPath.split('?');
+        const sanitizedPath = sanitizePath(path);
+        const sanitizedQuery = queryString ? sanitizeQueryParams(queryString) : '';
+        const i = sanitizedQuery ? `${sanitizedPath}?${sanitizedQuery}` : sanitizedPath;
+
+        // Add logging for each response
+        const originalWrite = l.write;
+        l.write = function(data) {
+            // Extract status code from response
+            const statusLine = data.toString().split('\r\n')[0];
+            const statusCode = statusLine.split(' ')[1];
+            
+            // Log the request
+            logRequest(ip, j, i, statusCode, userAgent);
+            
+            // Call original write function
+            return originalWrite.apply(this, arguments);
+        };
+
         // Rate limiting implementation
         // Get current timestamp
         const now = Date.now();
@@ -203,7 +255,8 @@ const server = net.createServer((l) => {
             // Handle root path "/"
             if (i === "/") {  
                 const authLine = f.find(line => line.toLowerCase().startsWith("authorization:"));
-                const token = authLine ? authLine.split(" ")[2] : null;
+                const rawToken = authLine ? authLine.split(" ")[2] : null;
+                const token = rawToken ? sanitizeToken(rawToken) : null;
                 
                 if (!token) {
                     const body = JSON.stringify({ 
@@ -295,7 +348,8 @@ const server = net.createServer((l) => {
         if (i.startsWith("/beasty")) {
           // extracts authorization header from the incoming request lines
           const authLine = f.find(line => line.toLowerCase().startsWith("authorization:"));
-          const token = authLine ? authLine.split(" ")[2] : null;       // and give null if not get token
+          const rawToken = authLine ? authLine.split(" ")[2] : null;
+          const token = rawToken ? sanitizeToken(rawToken) : null;
                  
     if (!token) {
         const body = JSON.stringify({ 
