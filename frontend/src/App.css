@@ -248,44 +248,51 @@ body, html, #root, .beasty-bg {
 
 .beasty-modal {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(24,28,32,0.92);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   z-index: 1000;
 }
 
 .beasty-modal-content {
   background: #181c20;
   padding: 2rem;
-  border-radius: 8px;
+  border: 1px solid #444;
+  border-radius: 4px;
   width: 100%;
   max-width: 400px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
 .beasty-modal-content h2 {
   color: #b7c9ce;
   margin-bottom: 1.5rem;
   text-align: center;
-  font-size: 1.5rem;
+  font-family: 'Press Start 2P', 'VT323', monospace;
 }
 
 .beasty-modal-content form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  width: 100%;
 }
 
 .beasty-modal-content input {
+  width: 100%;
+  padding: 0.8rem;
   background: #222;
   border: 1px solid #333;
-  color: #b7c9ce;
-  padding: 0.8rem;
-  border-radius: 4px;
+  color: #fff;
+  font-family: 'Courier New', monospace;
   font-size: 1rem;
-  width: 100%;
+  border-radius: 4px;
+  box-sizing: border-box;
 }
 
 .beasty-modal-content input:focus {
@@ -293,15 +300,21 @@ body, html, #root, .beasty-bg {
   outline: none;
 }
 
+.beasty-modal-content input::placeholder {
+  color: #666;
+}
+
 .beasty-modal-content button {
+  width: 100%;
+  padding: 0.8rem;
   background: #ff4b6e;
   color: white;
   border: none;
-  padding: 0.8rem;
   border-radius: 4px;
-  font-size: 1rem;
   cursor: pointer;
-  transition: background 0.2s;
+  font-family: 'Press Start 2P', 'VT323', monospace;
+  font-size: 1rem;
+  margin-top: 0.5rem;
 }
 
 .beasty-modal-content button:hover {
@@ -311,6 +324,31 @@ body, html, #root, .beasty-bg {
 .beasty-modal-content button:disabled {
   background: #666;
   cursor: not-allowed;
+}
+
+.beasty-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  color: #666;
+  cursor: pointer;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.beasty-modal-close:hover {
+  color: #fff;
+}
+
+.beasty-error {
+  color: #ff4b6e;
+  background: rgba(255, 75, 110, 0.1);
+  padding: 0.8rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  text-align: center;
+  border: 1px solid #ff4b6e;
 }
 
 .pixel-font {
@@ -514,15 +552,28 @@ body, html, #root, .beasty-bg {
 }
 
 .beasty-info-blue {
-  background: #1e2a3a;
-  color: #7ed6df;
+  color: #ff4b6e;
+  margin-top: 20px;
+  font-family: 'Press Start 2P', 'VT323', monospace;
+  font-size: 0.9rem;
+  background: rgba(255, 75, 110, 0.1);
+  padding: 10px 20px;
+  border-radius: 4px;
+  border: 1px solid #ff4b6e;
   text-align: center;
-  font-size: 1.08rem;
-  padding: 0.5rem 1.2rem;
-  border-radius: 5px;
-  margin: 0.7rem 0 0.7rem 0;
-  font-weight: 600;
-  letter-spacing: 0.2px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 75, 110, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 75, 110, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 75, 110, 0);
+  }
 }
 
 .beasty-footer-love {
@@ -543,11 +594,14 @@ body, html, #root, .beasty-bg {
 .beasty-doc-link {
   color: #ff4b6e;
   text-decoration: none;
-  transition: opacity 0.2s;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid transparent;
 }
 
 .beasty-doc-link:hover {
-  opacity: 0.8;
+  color: #ff3358;
+  border-bottom: 1px solid #ff3358;
 }
 
 .beasty-send-btn {
@@ -577,16 +631,6 @@ body, html, #root, .beasty-bg {
   color: #ff4b6e;
 }
 
-.beasty-error {
-  color: #ff4b6e;
-  background: rgba(255, 75, 110, 0.1);
-  padding: 10px;
-  border-radius: 4px;
-  margin-bottom: 15px;
-  text-align: center;
-  font-size: 0.9rem;
-}
-
 /* Update all font-family references to use only Google Fonts */
 .beasty-logo, 
 .beasty-title, 
@@ -600,3 +644,8 @@ body, html, #root, .beasty-bg {
 }
 
 /* Remove any other font-family declarations that might reference Pixelleteth */
+
+.beasty-docs-ref {
+  color: #7ed6df;
+  font-weight: normal;
+}

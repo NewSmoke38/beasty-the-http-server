@@ -11,54 +11,37 @@ const RegisterModal = ({ onClose }) => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError('');
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Register form submitted');
+    
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
     setError('');
     setLoading(true);
 
-    // checking if  passwords match
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
-      return;
-    }
-
-    // also for password length
-    if (formData.password.length < 6 || formData.password.length > 8) {
-      setError('Password must be between 6 and 8 characters');
-      setLoading(false);
-      return;
-    }
-
-    if (formData.username.length > 15) {
-      setError('Username must be less than 15 characters');
-      setLoading(false);
-      return;
-    }
-
-    if (formData.fullName.length > 15) {
-      setError('Full name must be less than 15 characters');
-      setLoading(false);
-      return;
-    }
-
     try {
-      const { confirmPassword, ...registerData } = formData;
-      const response = await authAPI.register(registerData);
+      console.log('Sending registration data:', { ...formData, confirmPassword: '***' });
+      const response = await authAPI.register(formData);
+      console.log('Registration response:', response);
       
       if (response.success) {
-        setSuccess(true);
-        setTimeout(() => {
-          onClose();
-        }, 2000);
+        console.log('Registration successful');
+        onClose();
       } else {
+        console.log('Registration failed:', response.message);
         setError(response.message || 'Registration failed. Please try again.');
       }
     } catch (err) {
@@ -76,81 +59,74 @@ const RegisterModal = ({ onClose }) => {
   };
 
   return (
-    <div className="binsider-modal">
-      <div className="binsider-modal-content">
-        <span className="binsider-modal-close" onClick={onClose}>&times;</span>
+    <div className="beasty-modal">
+      <div className="beasty-modal-content">
+        <span className="beasty-modal-close" onClick={onClose}>&times;</span>
         <h2>Register</h2>
-        {error && <div className="binsider-error">{error}</div>}
-        {success && <div className="binsider-success">Registration successful! Redirecting...</div>}
-        <form onSubmit={handleSubmit} id="register-form">
+        {error && <div className="beasty-error">{error}</div>}
+        <form onSubmit={handleSubmit}>
           <input
-            className="binsider-input"
-            id="register-fullname"
-            name="fullName"
+            className="beasty-input"
             type="text"
-            placeholder="Full Name (max 15 chars)"
+            name="fullName"
+            placeholder="Full Name"
             value={formData.fullName}
             onChange={handleChange}
-            required
-            disabled={loading || success}
             maxLength={15}
+            required
+            disabled={loading}
           />
           <input
-            className="binsider-input"
-            id="register-username"
-            name="username"
+            className="beasty-input"
             type="text"
-            placeholder="Username (max 15 chars)"
+            name="username"
+            placeholder="Username"
             value={formData.username}
             onChange={handleChange}
-            required
-            disabled={loading || success}
             maxLength={15}
+            required
+            disabled={loading}
           />
           <input
-            className="binsider-input"
-            id="register-email"
-            name="email"
+            className="beasty-input"
             type="email"
+            name="email"
             placeholder="Email"
             value={formData.email}
             onChange={handleChange}
             required
-            disabled={loading || success}
+            disabled={loading}
           />
           <input
-            className="binsider-input"
-            id="register-password"
-            name="password"
+            className="beasty-input"
             type="password"
-            placeholder="Password (6-8 chars)"
+            name="password"
+            placeholder="Password"
             value={formData.password}
             onChange={handleChange}
-            required
-            disabled={loading || success}
             minLength={6}
             maxLength={8}
+            required
+            disabled={loading}
           />
           <input
-            className="binsider-input"
-            id="register-confirm-password"
-            name="confirmPassword"
+            className="beasty-input"
             type="password"
+            name="confirmPassword"
             placeholder="Confirm Password"
             value={formData.confirmPassword}
             onChange={handleChange}
-            required
-            disabled={loading || success}
             minLength={6}
             maxLength={8}
+            required
+            disabled={loading}
           />
           <button 
-            className="binsider-btn"
-            type="submit" 
-            id="register-submit"
-            disabled={loading || success}
+            className="beasty-btn" 
+            type="submit"
+            disabled={loading}
           >
-            {loading ? 'Registering...' : success ? 'Success!' : 'Register'}
+            {loading ? 'Registering...' : 'Register'}
           </button>
         </form>
       </div>

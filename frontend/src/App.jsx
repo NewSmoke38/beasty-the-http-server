@@ -4,12 +4,9 @@ import RegisterModal from './components/registerModal';
 import { authAPI } from './services/api';
 
 const HTTP_OPTIONS = [
-  'GET /status',
-  'GET /logs',
-  'POST /login',
-  'POST /register',
-  'GET /dna',
-  'GET /lore',
+  'GET / (Root Request)',
+  'GET /?ip= (Request Info)',
+  'GET /?ip=127.0.0.1 (Request Details)',
 ];
 
 function App() {
@@ -19,6 +16,7 @@ function App() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+  const [user, setUser] = useState(null);
   const dropdownRef = useRef(null);
 
   // Close dropdown when clicking outside
@@ -47,12 +45,14 @@ function App() {
 
     try {
       const response = await authAPI.login({ email, password });
-      console.log('Login response:', response);
+      console.log('Full login response:', response);
       
       if (response.success) {
-        console.log('Login successful');
+        console.log('Login successful, setting user:', response);
+        // Store the entire response as user data for now
+        setUser(response);
+        console.log('User state after login:', response);
         setShowLogin(false);
-        // You might want to update the UI to show the user is logged in
       } else {
         console.log('Login failed:', response.message);
         setLoginError(response.message || 'Login failed. Please try again.');
@@ -71,6 +71,14 @@ function App() {
     }
   };
 
+  const handleLogout = () => {
+    console.log('=== Logout Process Started ===');
+    console.log('Current user before logout:', user);
+    setUser(null);
+    console.log('User state cleared');
+    console.log('=== Logout Process Completed ===');
+  };
+
   return (
     <div className="beasty-bg">
       {/* Top bar with tabs and path */}
@@ -82,8 +90,14 @@ function App() {
           <span className="beasty-tab">Lore</span>
         </span>
         <span className="beasty-auth-btns">
-          <button className="beasty-btn" onClick={() => setShowRegister(true)}>Register</button>
-          <button className="beasty-btn" onClick={() => setShowLogin(true)}>Login</button>
+          {!user ? (
+            <>
+              <button className="beasty-btn" onClick={() => setShowRegister(true)}>Register</button>
+              <button className="beasty-btn" onClick={() => setShowLogin(true)}>Login</button>
+            </>
+          ) : (
+            <button className="beasty-btn" onClick={handleLogout}>Logout</button>
+          )}
         </span>
       </div>
       {/* Main content */}
@@ -94,7 +108,10 @@ function App() {
           </div>
           <div className="beasty-desc">A HTTP server built from scratch.</div>
           <div className="beasty-desc beasty-desc-secondary">No frameworks. No shortcuts. Just raw code.</div>
-          <div className="beasty-info-blue">You can only make 4 requests. Use them wisely.</div>
+          <div className="beasty-info-blue">4 requests only. No retries.</div>
+          <div className="beasty-desc" style={{ marginTop: '25px' }}>
+            Lore <span className="beasty-docs-ref">(AKA Docs)</span> explain how it works.
+          </div>
         </div>
         {/* Custom HTTP dropdown field */}
         <div className="custom-dropdown-container" ref={dropdownRef}>
