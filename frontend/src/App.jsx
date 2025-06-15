@@ -1,18 +1,23 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
 import RegisterModal from './components/registerModal';
 import { authAPI } from './services/api';
+import DNA from './components/DNA';
+import Logs from './components/Logs';
+import Lore from './components/Lore';
+import Favicon from './components/Favicon';
+import { isTokenExpired, cleanupExpiredTokens, getTokenExpirationTime } from './utils/tokenUtils';
 
 const HTTP_OPTIONS = [
-  'GET / (Root Request)',
-  'GET /beasty (Request Info)',
-  'GET /beasty?withIP=true (Request Details)',
+  'GET /',
+  'GET /beasty',
+  'GET /beasty?withIP=true'
 ];
 
 function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
-  const [httpOption, setHttpOption] = useState("GET /");
+  const [httpOption, setHttpOption] = useState('GET /');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
@@ -21,6 +26,7 @@ function App() {
   const [response, setResponse] = useState(null);
   const [remainingRequests, setRemainingRequests] = useState(null);
   const [requestCount, setRequestCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState('main');
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -33,45 +39,94 @@ function App() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Add cleanup interval with error handling
+  useEffect(() => {
+    try {
+      // Initial cleanup
+      if (cleanupExpiredTokens()) {
+        setUser(null);
+        setRemainingRequests(null);
+        setRequestCount(0);
+      }
+
+      // Set up periodic cleanup every minute
+      const cleanupInterval = setInterval(() => {
+        try {
+          if (cleanupExpiredTokens()) {
+            setUser(null);
+            setRemainingRequests(null);
+            setRequestCount(0);
+          }
+        } catch (error) {
+          console.error('Error in token cleanup:', error);
+        }
+      }, 60000); // Check every minute
+
+      return () => clearInterval(cleanupInterval);
+    } catch (error) {
+      console.error('Error setting up token cleanup:', error);
+    }
+  }, []);
+
+  // Add error boundary for token operations
+  const handleTokenOperation = (operation) => {
+    try {
+      return operation();
+    } catch (error) {
+      console.error('Token operation error:', error);
+      setUser(null);
+      setRemainingRequests(null);
+      setRequestCount(0);
+      return null;
+    }
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
-    console.log('Login form submitted');
-    
-    const formData = new FormData(e.target);
-    const email = formData.get('email');
-    const password = formData.get('password');
-    
-    console.log('Login attempt with:', { email, password: '***' });
-    
     setLoginError('');
     setLoginLoading(true);
 
     try {
-      const response = await authAPI.login({ email, password });
-      console.log('Full login response:', response);
-      
+      const response = await authAPI.login({
+        email: e.target.email.value,
+        password: e.target.password.value
+      });
+
       if (response.success) {
-        console.log('Login successful, setting user:', response);
+        const { accessToken } = response.data;
+        
+        // Check if token is already expired
+        if (handleTokenOperation(() => isTokenExpired(accessToken))) {
+          setLoginError('Login failed: Token expired');
+          return;
+        }
+
         // Store the user data and token
         setUser({
           ...response.data.user,
-          token: response.data.accessToken
+          token: accessToken
         });
-        console.log('User state after login:', response.data);
+        
+        // Set up token expiration check
+        const expirationTime = handleTokenOperation(() => getTokenExpirationTime(accessToken));
+        if (expirationTime) {
+          const timeUntilExpiry = expirationTime - Date.now();
+          setTimeout(() => {
+            handleTokenOperation(() => {
+              setUser(null);
+              setRemainingRequests(null);
+              setRequestCount(0);
+            });
+          }, timeUntilExpiry);
+        }
+
         setShowLogin(false);
       } else {
-        console.log('Login failed:', response.message);
         setLoginError(response.message || 'Login failed. Please try again.');
       }
     } catch (err) {
       console.error('Login error:', err);
-      if (err.response?.data?.message) {
-        setLoginError(err.response.data.message);
-      } else if (err.message) {
-        setLoginError(err.message);
-      } else {
-        setLoginError('Login failed. Please try again.');
-      }
+      setLoginError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoginLoading(false);
     }
@@ -91,6 +146,12 @@ function App() {
     try {
       if (!user || !user.token) {
         setResponse({ error: "Please login first" });
+        return;
+      }
+
+      // Check if token is expired
+      if (handleTokenOperation(() => isTokenExpired(user.token))) {
+        setResponse({ error: "Session expired. Please login again." });
         return;
       }
 
@@ -138,23 +199,141 @@ function App() {
         throw new Error(`[You have used all your beasty requests] status: ${response.status}`);
       }
     } catch (error) {
-      console.error('Beasty request failed:', error);
+      console.error('Request error:', error);
       setResponse({ error: error.message || 'Request failed' });
-      if (error.message.includes('all your beasty requests')) {
-        setRemainingRequests(0);
-      }
+    }
+  };
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'dna':
+        return <DNA />;
+      case 'logs':
+        return <Logs />;
+      case 'lore':
+        return <Lore />;
+      default:
+        return (
+          <>
+            <div className="beasty-center-content">
+              <div className="beasty-logo pixel-font">
+                beasty<span className="beasty-dot">.</span>
+              </div>
+              <div className="beasty-desc">A HTTP server built from scratch.</div>
+              <div className="beasty-desc beasty-desc-secondary">No frameworks. No shortcuts. Just raw code.</div>
+              <div className="beasty-info-blue">4 requests only. No retries.</div>
+              <div className="beasty-desc" style={{ marginTop: '25px' }}>
+                Lore <span className="beasty-docs-ref">(AKA Docs)</span> explain how it works.
+              </div>
+              <div className="beasty-desc beasty-desc-secondary" style={{ fontSize: '0.9rem', marginTop: '5px' }}>
+                (recommended to read first, then try)
+              </div>
+            </div>
+            {/* Custom HTTP dropdown field */}
+            <div className="custom-dropdown-container" ref={dropdownRef}>
+              <div 
+                className="custom-dropdown-header"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              >
+                <span>{httpOption}</span>
+                <span className={`custom-dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}>▼</span>
+              </div>
+              {isDropdownOpen && (
+                <div className="custom-dropdown-list">
+                  {HTTP_OPTIONS.map((option) => (
+                    <div
+                      key={option}
+                      className={`custom-dropdown-item ${option === httpOption ? 'selected' : ''}`}
+                      onClick={() => {
+                        setHttpOption(option);
+                        setIsDropdownOpen(false);
+                      }}
+                    >
+                      {option}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {/* Terminal-like merged info box */}
+            <div className="beasty-info-merged-box terminal-box">
+              <div className="terminal-line">
+                <span className="terminal-user">beasty@server</span>:<span className="terminal-path">~$</span>
+                <span className="terminal-command">
+                  curl -i http://localhost:8000{httpOption.split(' ')[1]}
+                </span>
+                <span className="terminal-cursor">&nbsp;</span>
+              </div>
+              {response && (
+                <div className="terminal-response">
+                  <div className="response-header">Response:</div>
+                  <pre>
+                    {Object.entries(response).map(([key, value]) => (
+                      <div key={key}>
+                        <span className="json-key">"{key}"</span>: {typeof value === 'object' && value !== null ? (
+                          <pre>
+                            {Object.entries(value).map(([nestedKey, nestedValue]) => (
+                              <div key={nestedKey} style={{ marginLeft: '20px' }}>
+                                <span className="json-key">"{nestedKey}"</span>: {typeof nestedValue === 'string' ? `"${nestedValue}"` : nestedValue}
+                              </div>
+                            ))}
+                          </pre>
+                        ) : (
+                          typeof value === 'string' ? `"${value}"` : value
+                        )}
+                      </div>
+                    ))}
+                  </pre>
+                </div>
+              )}
+            </div>
+            {/* Footer navigation hints */}
+            <div className="beasty-footer-nav">
+              <button 
+                className={`beasty-send-btn ${requestCount >= 5 ? 'beasty-send-btn-disabled' : ''}`}
+                onClick={requestCount >= 5 ? undefined : handleSendRequest}
+                disabled={requestCount >= 5}
+                style={{ pointerEvents: requestCount >= 5 ? 'none' : 'auto' }}
+              >
+                <span className="beasty-footer-hint beasty-footer-orange">[Enter→</span>Send<span className="beasty-footer-hint">]</span>
+              </button>
+              <span className="beasty-footer-hint">[Open→</span><a href="/docs" className="beasty-doc-link">Documentation</a><span className="beasty-footer-hint">]</span>
+            </div>
+          </>
+        );
     }
   };
 
   return (
     <div className="beasty-bg">
+      <Favicon />
       {/* Top bar with tabs and path */}
       <div className="beasty-topbar">
         <span className="beasty-tabs">
-          <span className="beasty-tab beasty-tab-active">Main</span>
-          <span className="beasty-tab">DNA</span>
-          <span className="beasty-tab">Logs</span>
-          <span className="beasty-tab">Lore</span>
+          <span 
+            className={`beasty-tab ${currentPage === 'main' ? 'beasty-tab-active' : ''}`}
+            onClick={() => setCurrentPage('main')}
+          >
+            Main
+          </span>
+          <span 
+            className={`beasty-tab ${currentPage === 'dna' ? 'beasty-tab-active' : ''}`}
+            onClick={() => setCurrentPage('dna')}
+          >
+            DNA
+          </span>
+          <span 
+            className={`beasty-tab ${currentPage === 'logs' ? 'beasty-tab-active' : ''}`}
+            onClick={() => setCurrentPage('logs')}
+          >
+            Logs
+          </span>
+          <span 
+            className={`beasty-tab ${currentPage === 'lore' ? 'beasty-tab-active' : ''}`}
+            onClick={() => setCurrentPage('lore')}
+          >
+            Lore
+          </span>
         </span>
         <span className="beasty-auth-btns">
           {!user ? (
@@ -169,87 +348,7 @@ function App() {
       </div>
       {/* Main content */}
       <div className="beasty-mainbox">
-        <div className="beasty-center-content">
-          <div className="beasty-logo pixel-font">
-            beasty<span className="beasty-dot">.</span>
-          </div>
-          <div className="beasty-desc">A HTTP server built from scratch.</div>
-          <div className="beasty-desc beasty-desc-secondary">No frameworks. No shortcuts. Just raw code.</div>
-          <div className="beasty-info-blue">4 requests only. No retries.</div>
-          <div className="beasty-desc" style={{ marginTop: '25px' }}>
-            Lore <span className="beasty-docs-ref">(AKA Docs)</span> explain how it works.
-          </div>
-        </div>
-        {/* Custom HTTP dropdown field */}
-        <div className="custom-dropdown-container" ref={dropdownRef}>
-          <div 
-            className="custom-dropdown-header"
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          >
-            <span>{httpOption}</span>
-            <span className={`custom-dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}>▼</span>
-          </div>
-          {isDropdownOpen && (
-            <div className="custom-dropdown-list">
-              {HTTP_OPTIONS.map((option) => (
-                <div
-                  key={option}
-                  className={`custom-dropdown-item ${option === httpOption ? 'selected' : ''}`}
-                  onClick={() => {
-                    setHttpOption(option);
-                    setIsDropdownOpen(false);
-                  }}
-                >
-                  {option}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        {/* Terminal-like merged info box */}
-        <div className="beasty-info-merged-box terminal-box">
-          <div className="terminal-line">
-            <span className="terminal-user">beasty@server</span>:<span className="terminal-path">~$</span>
-            <span className="terminal-command">
-              curl -i http://localhost:8000{httpOption.split(' ')[1]}
-            </span>
-            <span className="terminal-cursor">&nbsp;</span>
-          </div>
-          {response && (
-            <div className="terminal-response">
-              <div className="response-header">Response:</div>
-              <pre>
-                {Object.entries(response).map(([key, value]) => (
-                  <div key={key}>
-                    <span className="json-key">"{key}"</span>: {typeof value === 'object' && value !== null ? (
-                      <pre>
-                        {Object.entries(value).map(([nestedKey, nestedValue]) => (
-                          <div key={nestedKey} style={{ marginLeft: '20px' }}>
-                            <span className="json-key">"{nestedKey}"</span>: {typeof nestedValue === 'string' ? `"${nestedValue}"` : nestedValue}
-                          </div>
-                        ))}
-                      </pre>
-                    ) : (
-                      typeof value === 'string' ? `"${value}"` : value
-                    )}
-                  </div>
-                ))}
-              </pre>
-            </div>
-          )}
-        </div>
-        {/* Footer navigation hints */}
-        <div className="beasty-footer-nav">
-          <button 
-            className={`beasty-send-btn ${requestCount >= 5 ? 'beasty-send-btn-disabled' : ''}`}
-            onClick={requestCount >= 5 ? undefined : handleSendRequest}
-            disabled={requestCount >= 5}
-            style={{ pointerEvents: requestCount >= 5 ? 'none' : 'auto' }}
-          >
-            <span className="beasty-footer-hint beasty-footer-orange">[Enter→</span>Send<span className="beasty-footer-hint">]</span>
-          </button>
-          <span className="beasty-footer-hint">[Open→</span><a href="/docs" className="beasty-doc-link">Documentation</a><span className="beasty-footer-hint">]</span>
-        </div>
+        {renderPage()}
       </div>
       {/* Modals for Register and Login */}
       {showRegister && <RegisterModal onClose={() => setShowRegister(false)} />}
