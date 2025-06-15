@@ -1,16 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
 /* Reset and base styles */
-body, html, #root, .binsider-bg {
+body, html, #root, .beasty-bg {
   background: #181c20;
   min-height: 100vh;
   margin: 0;
   padding: 0;
-  font-family: 'Fira Mono', 'JetBrains Mono', 'Cascadia Mono', 'Consolas', 'Menlo', monospace;
+  font-family: 'Press Start 2P', 'VT323', monospace;
   color: #e0e0e0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  flex-direction: column;
 }
 
-.binsider-bg {
+.beasty-bg {
   width: 100vw;
   min-height: 100vh;
   display: flex;
@@ -19,7 +24,7 @@ body, html, #root, .binsider-bg {
   justify-content: flex-start;
 }
 
-.binsider-topbar {
+.beasty-topbar {
   width: 100vw;
   background: #181c20;
   color: #b7c9ce;
@@ -32,40 +37,42 @@ body, html, #root, .binsider-bg {
   box-sizing: border-box;
   letter-spacing: 0.5px;
 }
-.binsider-tabs {
+.beasty-tabs {
   margin-left: 2.5rem;
   display: flex;
   gap: 1.2rem;
 }
-.binsider-tab {
+.beasty-tab {
   color: #7ed6df;
   opacity: 0.7;
   cursor: pointer;
   font-weight: 500;
   padding: 0 0.2rem;
   transition: color 0.2s, opacity 0.2s;
+  font-family: 'Press Start 2P', 'VT323', monospace !important;
 }
-.binsider-tab-active {
+.beasty-tab-active {
   color: #fff;
   opacity: 1;
   border-bottom: 2px solid #7ed6df;
   font-weight: bold;
 }
-.binsider-title-version {
+.beasty-title-version {
   margin-left: 1.5rem;
   color: #b7c9ce;
   font-size: 1.02rem;
   opacity: 0.7;
   flex: 1;
+  font-family: 'Press Start 2P', 'VT323', monospace !important;
 }
-.binsider-path {
+.beasty-path {
   margin-right: 2.5rem;
   color: #b7c9ce;
   font-size: 1.02rem;
   opacity: 0.7;
 }
 
-.binsider-mainbox {
+.beasty-mainbox {
   margin-top: 2.5rem;
   background: #181c20;
   border: 2px solid #444;
@@ -79,67 +86,67 @@ body, html, #root, .binsider-bg {
   align-items: center;
 }
 
-.binsider-center-content {
+.beasty-center-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-bottom: 2.5rem;
 }
-.binsider-logo {
+.beasty-logo {
   font-size: 3.2rem;
   font-weight: bold;
   color: #fff;
   letter-spacing: 2px;
   margin-bottom: 1.3rem;
-  font-family: 'Fira Mono', 'JetBrains Mono', monospace;
+  font-family: 'Press Start 2P', 'VT323', monospace !important;
 }
-.binsider-dot {
+.beasty-dot {
   color: #b7c9ce;
 }
-.binsider-desc {
+.beasty-desc {
   font-size: 1.25rem;
   color: #b7c9ce;
   margin-bottom: 0.7rem;
   text-align: center;
 }
-.binsider-desc-secondary {
+.beasty-desc-secondary {
   text-align: center;
   font-size: 1.08rem;
   color: #b0b0b0;
   margin-top: 0.1rem;
   margin-bottom: 0.7rem;
 }
-.binsider-italic {
+.beasty-italic {
   color: #f6c177;
   font-style: italic;
 }
-.binsider-link {
+.beasty-link {
   color: #7ed6df;
   font-size: 1.08rem;
   margin-bottom: 0.2rem;
 }
-.binsider-by {
+.beasty-by {
   display: none !important;
 }
-.binsider-heart {
+.beasty-heart {
   color: #ff4b6e;
   font-size: 1.1em;
   vertical-align: middle;
 }
-.binsider-author {
+.beasty-author {
   color: #7ecfff;
   font-weight: bold;
   font-family: inherit;
 }
 
-.binsider-info-box {
+.beasty-info-box {
   display: flex;
   flex-direction: row;
   gap: 2.5rem;
   margin-bottom: 2.2rem;
   margin-top: 1.2rem;
 }
-.binsider-file-info {
+.beasty-file-info {
   background: #181c20;
   border: 1.5px solid #444;
   border-radius: 6px;
@@ -149,10 +156,10 @@ body, html, #root, .binsider-bg {
   font-size: 1.08rem;
   box-shadow: 0 0 0 1px #222;
 }
-.binsider-file {
+.beasty-file {
   color: #7ed6df;
 }
-.binsider-deps-box {
+.beasty-deps-box {
   background: #181c20;
   border: 1.5px solid #444;
   border-radius: 6px;
@@ -162,17 +169,17 @@ body, html, #root, .binsider-bg {
   font-size: 1.08rem;
   box-shadow: 0 0 0 1px #222;
 }
-.binsider-deps-title {
+.beasty-deps-title {
   color: #b7c9ce;
   font-weight: bold;
   margin-bottom: 0.7rem;
   font-size: 1.1rem;
 }
-.binsider-deps-table {
+.beasty-deps-table {
   width: 100%;
   margin-top: 0.2rem;
 }
-.binsider-deps-header {
+.beasty-deps-header {
   display: flex;
   justify-content: space-between;
   color: #b7c9ce;
@@ -180,17 +187,17 @@ body, html, #root, .binsider-bg {
   font-weight: bold;
   margin-bottom: 0.2rem;
 }
-.binsider-deps-row {
+.beasty-deps-row {
   display: flex;
   justify-content: space-between;
   font-size: 1.05rem;
   margin-bottom: 0.1rem;
 }
-.binsider-dep-green {
+.beasty-dep-green {
   color: #a3be8c;
 }
 
-.binsider-footer-nav {
+.beasty-footer-nav {
   width: 100%;
   display: flex;
   justify-content: center;
@@ -198,29 +205,29 @@ body, html, #root, .binsider-bg {
   margin-top: 1.5rem;
   font-size: 1.08rem;
   color: #b7c9ce;
-  font-family: 'Fira Mono', 'JetBrains Mono', monospace;
+  font-family: 'Press Start 2P', 'VT323', monospace;
 }
-.binsider-footer-hint {
+.beasty-footer-hint {
   color: #b7c9ce;
   font-weight: 500;
   margin: 0 0.1rem;
 }
-.binsider-footer-orange {
+.beasty-footer-orange {
   color: #f6c177;
 }
-.binsider-footer-yellow {
+.beasty-footer-yellow {
   color: #e5c07b;
 }
-.binsider-footer-red {
+.beasty-footer-red {
   color: #f67280;
 }
 
-.binsider-auth-btns {
+.beasty-auth-btns {
   margin-right: 2.5rem;
   display: flex;
   gap: 0.7rem;
 }
-.binsider-btn {
+.beasty-btn {
   background: #23272e;
   color: #b7c9ce;
   border: 1.5px solid #444;
@@ -231,14 +238,15 @@ body, html, #root, .binsider-bg {
   padding: 0.35rem 1.1rem;
   cursor: pointer;
   transition: background 0.2s, color 0.2s, border 0.2s;
+  font-family: 'Press Start 2P', 'VT323', monospace !important;
 }
-.binsider-btn:hover {
+.beasty-btn:hover {
   background: #444;
   color: #fff;
   border: 1.5px solid #7ed6df;
 }
 
-.binsider-modal {
+.beasty-modal {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(24,28,32,0.92);
@@ -248,69 +256,65 @@ body, html, #root, .binsider-bg {
   z-index: 1000;
 }
 
-.binsider-modal-content {
+.beasty-modal-content {
   background: #181c20;
-  border: 2px solid #444;
+  padding: 2rem;
   border-radius: 8px;
-  box-shadow: 0 0 0 1.5px #222, 0 2px 24px #000a;
-  min-width: 260px;
-  max-width: 340px;
-  padding: 2.2rem 2.7rem 2rem 2.7rem;
-  position: relative;
-  font-family: inherit;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.beasty-modal-content h2 {
+  color: #b7c9ce;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: 1.5rem;
+}
+
+.beasty-modal-content form {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 1rem;
 }
 
-.binsider-modal-content h2 {
-  color: #7ed6df;
-  font-size: 1.3rem;
-  margin-bottom: 1.2rem;
-  text-align: center;
+.beasty-modal-content input {
+  background: #222;
+  border: 1px solid #333;
+  color: #b7c9ce;
+  padding: 0.8rem;
+  border-radius: 4px;
+  font-size: 1rem;
   width: 100%;
 }
 
-.binsider-modal-content form {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.binsider-input {
-  width: 100%;
-  margin-bottom: 1.1rem;
-  padding: 0.7rem;
-  border-radius: 5px;
-  border: 2px solid #444;
-  background: #101010;
-  color: #e0e0e0;
-  font-size: 1.05rem;
-  font-family: inherit;
-  text-align: center;
-}
-
-.binsider-input:focus {
+.beasty-modal-content input:focus {
+  border-color: #ff4b6e;
   outline: none;
-  border-color: #7ed6df;
 }
 
-.binsider-modal-content .binsider-btn {
-  margin-top: 0.5rem;
-  width: 100%;
-  text-align: center;
+.beasty-modal-content button {
+  background: #ff4b6e;
+  color: white;
+  border: none;
+  padding: 0.8rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
-@font-face {
-  font-family: 'Pixelleteth';
-  src: url('/fonts/Pixelleteth.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
+.beasty-modal-content button:hover {
+  background: #ff3358;
+}
+
+.beasty-modal-content button:disabled {
+  background: #666;
+  cursor: not-allowed;
 }
 
 .pixel-font {
-  font-family: 'Pixelleteth', 'Press Start 2P', 'VT323', 'Pixel Operator', monospace !important;
+  font-family: 'Press Start 2P', 'VT323', monospace !important;
   letter-spacing: 2px;
   font-size: 2.2rem;
   text-transform: lowercase;
@@ -346,7 +350,7 @@ body, html, #root, .binsider-bg {
   background: transparent;
 }
 
-.binsider-info-merged-box {
+.beasty-info-merged-box {
   background: #181c20;
   border: 1.5px solid #444;
   border-radius: 6px;
@@ -360,8 +364,8 @@ body, html, #root, .binsider-bg {
   flex-direction: row;
   gap: 2.5rem;
 }
-.binsider-info-merged-box .binsider-file-info,
-.binsider-info-merged-box .binsider-deps-box {
+.beasty-info-merged-box .beasty-file-info,
+.beasty-info-merged-box .beasty-deps-box {
   background: none;
   border: none;
   border-radius: 0;
@@ -450,7 +454,7 @@ body, html, #root, .binsider-bg {
 .beasty-http-input option {
   background: #1a1a1a;
   color: #7ecfff;
-  font-family: 'PixelOperator', 'Fira Mono', 'Menlo', monospace;
+  font-family: 'Press Start 2P', 'VT323', monospace;
   padding: 0.5rem;
 }
 
@@ -473,7 +477,7 @@ body, html, #root, .binsider-bg {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  font-family: 'Fira Mono', 'JetBrains Mono', monospace;
+  font-family: 'Press Start 2P', 'VT323', monospace;
   box-sizing: border-box;
 }
 .terminal-line {
@@ -527,7 +531,7 @@ body, html, #root, .binsider-bg {
   position: fixed;
   left: 0;
   bottom: 10px;
-  font-family: 'PixelOperator', 'Fira Mono', 'Menlo', monospace;
+  font-family: 'Press Start 2P', 'VT323', monospace;
   font-size: 1rem;
   color: #6c7a89;
   letter-spacing: 0.05em;
@@ -536,17 +540,17 @@ body, html, #root, .binsider-bg {
   pointer-events: none;
 }
 
-.binsider-doc-link {
+.beasty-doc-link {
   color: #ff4b6e;
   text-decoration: none;
   transition: opacity 0.2s;
 }
 
-.binsider-doc-link:hover {
+.beasty-doc-link:hover {
   opacity: 0.8;
 }
 
-.binsider-send-btn {
+.beasty-send-btn {
   background: none;
   border: none;
   padding: 0;
@@ -561,14 +565,38 @@ body, html, #root, .binsider-bg {
   line-height: 1;
 }
 
-.binsider-send-btn:hover {
+.beasty-send-btn:hover {
   opacity: 0.8;
 }
 
-.binsider-send-btn:active {
+.beasty-send-btn:active {
   opacity: 0.6;
 }
 
 .beasty-dot {
   color: #ff4b6e;
 }
+
+.beasty-error {
+  color: #ff4b6e;
+  background: rgba(255, 75, 110, 0.1);
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* Update all font-family references to use only Google Fonts */
+.beasty-logo, 
+.beasty-title, 
+.beasty-tab, 
+.beasty-btn,
+.pixel-font,
+.beasty-path,
+.beasty-footer-hint,
+.beasty-title-version {
+  font-family: 'Press Start 2P', 'VT323', monospace !important;
+}
+
+/* Remove any other font-family declarations that might reference Pixelleteth */

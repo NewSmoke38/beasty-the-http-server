@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import './App.css';
+import RegisterModal from './components/registerModal';
+import { authAPI } from './services/api';
 
 const HTTP_OPTIONS = [
   'GET /status',
@@ -15,6 +17,8 @@ function App() {
   const [showRegister, setShowRegister] = useState(false);
   const [httpOption, setHttpOption] = useState(HTTP_OPTIONS[0]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
   const dropdownRef = useRef(null);
 
   // Close dropdown when clicking outside
@@ -28,29 +32,68 @@ function App() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    console.log('Login form submitted');
+    
+    const formData = new FormData(e.target);
+    const email = formData.get('email');
+    const password = formData.get('password');
+    
+    console.log('Login attempt with:', { email, password: '***' });
+    
+    setLoginError('');
+    setLoginLoading(true);
+
+    try {
+      const response = await authAPI.login({ email, password });
+      console.log('Login response:', response);
+      
+      if (response.success) {
+        console.log('Login successful');
+        setShowLogin(false);
+        // You might want to update the UI to show the user is logged in
+      } else {
+        console.log('Login failed:', response.message);
+        setLoginError(response.message || 'Login failed. Please try again.');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      if (err.response?.data?.message) {
+        setLoginError(err.response.data.message);
+      } else if (err.message) {
+        setLoginError(err.message);
+      } else {
+        setLoginError('Login failed. Please try again.');
+      }
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
   return (
-    <div className="binsider-bg">
+    <div className="beasty-bg">
       {/* Top bar with tabs and path */}
-      <div className="binsider-topbar">
-        <span className="binsider-tabs">
-          <span className="binsider-tab binsider-tab-active">Main</span>
-          <span className="binsider-tab">DNA</span>
-          <span className="binsider-tab">Logs</span>
-          <span className="binsider-tab">Lore</span>
+      <div className="beasty-topbar">
+        <span className="beasty-tabs">
+          <span className="beasty-tab beasty-tab-active">Main</span>
+          <span className="beasty-tab">DNA</span>
+          <span className="beasty-tab">Logs</span>
+          <span className="beasty-tab">Lore</span>
         </span>
-        <span className="binsider-auth-btns">
-          <button className="binsider-btn" onClick={() => setShowRegister(true)}>Register</button>
-          <button className="binsider-btn" onClick={() => setShowLogin(true)}>Login</button>
+        <span className="beasty-auth-btns">
+          <button className="beasty-btn" onClick={() => setShowRegister(true)}>Register</button>
+          <button className="beasty-btn" onClick={() => setShowLogin(true)}>Login</button>
         </span>
       </div>
       {/* Main content */}
-      <div className="binsider-mainbox">
-        <div className="binsider-center-content">
-          <div className="binsider-logo pixel-font">
+      <div className="beasty-mainbox">
+        <div className="beasty-center-content">
+          <div className="beasty-logo pixel-font">
             beasty<span className="beasty-dot">.</span>
           </div>
-          <div className="binsider-desc">A HTTP server built from scratch.</div>
-          <div className="binsider-desc binsider-desc-secondary">No frameworks. No shortcuts. Just raw code.</div>
+          <div className="beasty-desc">A HTTP server built from scratch.</div>
+          <div className="beasty-desc beasty-desc-secondary">No frameworks. No shortcuts. Just raw code.</div>
           <div className="beasty-info-blue">You can only make 4 requests. Use them wisely.</div>
         </div>
         {/* Custom HTTP dropdown field */}
@@ -80,51 +123,58 @@ function App() {
           )}
         </div>
         {/* Terminal-like merged info box (now just prompt and cursor) */}
-        <div className="binsider-info-merged-box terminal-box">
+        <div className="beasty-info-merged-box terminal-box">
           <div className="terminal-line">
             <span className="terminal-user">beasty@server</span>:<span className="terminal-path">~$</span>
             <span className="terminal-cursor">&nbsp;</span>
           </div>
         </div>
         {/* Footer navigation hints */}
-        <div className="binsider-footer-nav">
-          <button className="binsider-send-btn" onClick={() => console.log('Sending request:', httpOption)}>
-            <span className="binsider-footer-hint binsider-footer-orange">[Enter→</span>Send<span className="binsider-footer-hint">]</span>
+        <div className="beasty-footer-nav">
+          <button className="beasty-send-btn" onClick={() => console.log('Sending request:', httpOption)}>
+            <span className="beasty-footer-hint beasty-footer-orange">[Enter→</span>Send<span className="beasty-footer-hint">]</span>
           </button>
-          <span className="binsider-footer-hint">[Open→</span><a href="/docs" className="binsider-doc-link">Documentation</a><span className="binsider-footer-hint">]</span>
+          <span className="beasty-footer-hint">[Open→</span><a href="/docs" className="beasty-doc-link">Documentation</a><span className="beasty-footer-hint">]</span>
         </div>
       </div>
       {/* Modals for Register and Login */}
-      {showRegister && (
-        <div className="binsider-modal">
-          <div className="binsider-modal-content">
-            <span className="binsider-modal-close" onClick={() => setShowRegister(false)}>&times;</span>
-            <h2>Register</h2>
-            <form>
-              <input className="binsider-input" type="text" placeholder="Full Name" />
-              <input className="binsider-input" type="text" placeholder="Username" />
-              <input className="binsider-input" type="email" placeholder="Email" />
-              <input className="binsider-input" type="password" placeholder="Password" />
-              <button className="binsider-btn" type="submit">Register</button>
-            </form>
-          </div>
-        </div>
-      )}
+      {showRegister && <RegisterModal onClose={() => setShowRegister(false)} />}
       {showLogin && (
-        <div className="binsider-modal">
-          <div className="binsider-modal-content">
-            <span className="binsider-modal-close" onClick={() => setShowLogin(false)}>&times;</span>
+        <div className="beasty-modal">
+          <div className="beasty-modal-content">
+            <span className="beasty-modal-close" onClick={() => setShowLogin(false)}>&times;</span>
             <h2>Login</h2>
-            <form>
-              <input className="binsider-input" type="text" placeholder="Username or Email" />
-              <input className="binsider-input" type="password" placeholder="Password" />
-              <button className="binsider-btn" type="submit">Login</button>
+            {loginError && <div className="beasty-error">{loginError}</div>}
+            <form onSubmit={handleLogin}>
+              <input 
+                className="beasty-input" 
+                type="email" 
+                name="email"
+                placeholder="Email" 
+                required
+                disabled={loginLoading}
+              />
+              <input 
+                className="beasty-input" 
+                type="password" 
+                name="password"
+                placeholder="Password" 
+                required
+                disabled={loginLoading}
+              />
+              <button 
+                className="beasty-btn" 
+                type="submit"
+                disabled={loginLoading}
+              >
+                {loginLoading ? 'Logging in...' : 'Login'}
+              </button>
             </form>
           </div>
         </div>
       )}
       {/* Made with love footer */}
-      <div className="beasty-footer-love">[with <span className="binsider-heart">♥</span> by <span className="binsider-author">chxshi</span>]</div>
+      <div className="beasty-footer-love">[with <span className="beasty-heart">♥</span> by <span className="beasty-author">chxshi</span>]</div>
     </div>
   );
 }
