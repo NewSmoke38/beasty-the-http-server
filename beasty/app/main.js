@@ -46,15 +46,40 @@ function sanitizeQueryParams(queryString) {
     return params.toString();
 }
 
+// Function to extract origin from request headers
+function extractOrigin(headers) {
+    console.log('All headers:', headers);  // Debug log
+    const origin = headers.find(h => h.toLowerCase().startsWith('origin:'));
+    console.log('Found origin:', origin);  // Debug log
+    if (!origin) return null;
+    const originValue = origin.split(':')[1].trim();
+    console.log('Extracted origin value:', originValue);  // Debug log
+    return originValue;
+}
+
 // CORS headers
-const corsHeaders = [
-    // Allows specific websites to access your server
-    "Access-Control-Allow-Origin: " + config.corsOrigins.join(", "),
-    "Access-Control-Allow-Methods: GET",       // only GET allowed 
-    "Access-Control-Allow-Headers: Content-Type, Authorization",
-    // for how much time should the browser cache these data, we will do it for 24 hrs
-    "Access-Control-Max-Age: 86400"
-];
+// allows specific websites to access your server
+const corsHeaders = (origin) => {
+    console.log('CORS headers called with origin:', origin);  // Debug log
+    console.log('Allowed origins:', config.corsOrigins);  // Debug log
+    if (!origin || !config.corsOrigins.includes(origin)) {
+        console.log('Origin not allowed, using first allowed origin');  // Debug log
+        return [
+            "Access-Control-Allow-Origin: " + config.corsOrigins[0],
+            "Access-Control-Allow-Methods: GET, OPTIONS",
+            "Access-Control-Allow-Headers: Content-Type, Authorization",
+            "Access-Control-Max-Age: 86400"
+        ];
+    }
+    console.log('Using exact origin:', origin);  // Debug log
+    return [
+        "Access-Control-Allow-Origin: " + origin,
+        "Access-Control-Allow-Methods: GET, OPTIONS",
+        "Access-Control-Allow-Headers: Content-Type, Authorization",
+            // for how much time should the browser cache these data, we will do it for 24 hrs
+        "Access-Control-Max-Age: 86400"
+    ];
+};
 
 //  protection against common web vulnerabilities
 const securityHeaders = [
@@ -72,8 +97,6 @@ const securityHeaders = [
     "Strict-Transport-Security: max-age=31536000; includeSubDomains"
 ];
 
-
-
 // Rate limiting
 // Create a Map(it is better here in this case) to store request counts for each IP address
 const requestCounts = new Map();
@@ -85,18 +108,37 @@ const cleanupInterval = setInterval(() => {
     // Get current timestamp in milliseconds
     const now = Date.now();
 
-    for (const [ip, data] of requestCounts.entries()) {          // ip is key, data is value
+    // Clean up request counts
+    for (const [ip, data] of requestCounts.entries()) {
         // Check if this IP's last request was more than windowMs ago
-        // windowMs is 15 minutes (15 * 60 * 1000 milliseconds) 
-        if (now - data.timestamp > config.rateLimit.windowMs) {
+         // windowMs is 15 minutes (15 * 60 * 1000 milliseconds) 
+            if (now - data.timestamp > config.rateLimit.windowMs) {
             // If yes, remove this IP from the Map
             // This prevents the Map from growing infinitely
             requestCounts.delete(ip);
         }
     }
+
+    // Clean up IP block list
+    for (const [ip, blockData] of ipBlockList.entries()) {
+        if (blockData.blockedUntil < now) {
+            ipBlockList.delete(ip);
+        }
+    }
+
+    // Clean up request throttling
+    for (const [ip, lastTime] of lastRequestTime.entries()) {
+        if (now - lastTime > config.throttling.minTimeBetweenRequests * 2) {
+            lastRequestTime.delete(ip);
+        }
+    }
+
+    console.log('Cleanup completed:', {
+        requestCounts: requestCounts.size,
+        ipBlockList: ipBlockList.size,
+        lastRequestTime: lastRequestTime.size
+    });
 }, 60000); // Run this cleanup every 60 seconds
-
-
 
 // Cleanup on server shutdown
 // SIGTERM is a signal sent to a process to request its termination
@@ -110,12 +152,7 @@ process.on('SIGTERM', () => {
     server.close();
 });
 
-
-
-
 global.beastyStartTime = Date.now();        // shows server up time of beasty
-
-
 
 // beasty making startsss
 // Create a new TCP server using Node's net module
@@ -123,7 +160,29 @@ global.beastyStartTime = Date.now();        // shows server up time of beasty
 const server = net.createServer((l) => {
     l.on("data", (b) => {
         const ip = l.remoteAddress;
+        const requestData = b.toString();
+        console.log('Raw request data:', requestData);  // Debug log
+        const headers = requestData.split('\r\n');
+        const origin = extractOrigin(headers);
+        console.log('Extracted origin:', origin);  // Debug log
         
+        // Handle preflight requests
+        // special req by broswers made before actual ones to check if the actual reqs a re allowed, its [option]
+        if (requestData.startsWith('OPTIONS')) {
+            console.log('Handling preflight request');  // Debug log
+            const response = [
+                "HTTP/1.1 204 No Content",
+                ...corsHeaders(origin),
+                "",
+                ""
+            ].join("\r\n");
+            
+            l.write(response, () => {
+                l.destroy();
+            });
+            return;
+        }
+
         // small thingy done for whitlisting and blacklisting IPs for the sake of beasty!! 
         // Check if IP access control is enabled
         if (config.ipAccess.enabled) {
@@ -137,7 +196,7 @@ const server = net.createServer((l) => {
                 const response = [
                     "HTTP/1.1 403 Forbidden",
                     "Content-Type: application/json",
-                    ...corsHeaders,
+                    ...corsHeaders(origin),
                     ...securityHeaders,
                     `Content-Length: ${Buffer.byteLength(body)}`,
                     "",
@@ -189,7 +248,7 @@ const server = net.createServer((l) => {
                 const response = [
                     "HTTP/1.1 429 Too Many Requests",
                     "Content-Type: application/json",
-                    ...corsHeaders,
+                    ...corsHeaders(origin),
                     ...securityHeaders,
                     `Content-Length: ${Buffer.byteLength(body)}`,
                     "",
@@ -205,9 +264,7 @@ const server = net.createServer((l) => {
             lastRequestTime.set(ip, Date.now());
         }
 
-
-
-        const f = b.toString().split("\r\n");      // convert b data coming from users in packets to string
+        const f = headers.slice(1);      // convert b data coming from users in packets to string
         // f is an array tho
 
         // extract the User-Agent header from the req headers - tells us what browser/client is making the request, although for now it always will be curl cause we only allow it
@@ -217,8 +274,10 @@ const server = net.createServer((l) => {
         // j = HTTP method (GET, POST, etc.)
         // rawPath = the requested path (/beasty, /echo, etc.)
         // q = HTTP version (HTTP/1.1)
-        const [j, rawPath, q] = f[0].split(" ");
-
+        const requestLine = headers[0];  // Get the first line which contains the method
+        console.log('Request line:', requestLine);  // Debug log
+        const [j, rawPath, q] = requestLine.split(" ");
+        console.log('Parsed method:', j);  // Debug log
 
         // sanitize the path and query parameters
         const [path, queryString] = rawPath.split('?');
@@ -278,7 +337,7 @@ const server = net.createServer((l) => {
             const response = [
                 "HTTP/1.1 403 Forbidden",
                 "Content-Type: application/json",
-                ...corsHeaders,
+                ...corsHeaders(origin),
                 ...securityHeaders,
                 `Content-Length: ${Buffer.byteLength(body)}`,
                 "",
@@ -291,7 +350,6 @@ const server = net.createServer((l) => {
             return;
         }
 
-
     // allowed stuff 
     // GET: for getting data
     // OPTIONS: special req for checking what methods are allowed (used by browsers for CORS)
@@ -302,7 +360,7 @@ const server = net.createServer((l) => {
             "HTTP/1.1 204 No Content",
             
             // Add our CORS headers so browser knows what's allowed
-            ...corsHeaders,
+            ...corsHeaders(origin),
             
             // Add security headers
             ...securityHeaders,
@@ -317,7 +375,6 @@ const server = net.createServer((l) => {
         return;
     }
 
-
     // Check if the requested method is allowed
     if (!allowedMethods.includes(j)) {
         const body = JSON.stringify({ 
@@ -327,7 +384,7 @@ const server = net.createServer((l) => {
         const response = [
             "HTTP/1.1 405 Method Not Allowed",
             "Content-Type: application/json",
-            ...corsHeaders,
+            ...corsHeaders(origin),
             ...securityHeaders,
             `Content-Length: ${Buffer.byteLength(body)}`,
             "",
@@ -342,8 +399,19 @@ const server = net.createServer((l) => {
             // Handle root path "/"
             if (i === "/") {  
                 const authLine = f.find(line => line.toLowerCase().startsWith("authorization:"));
-                const rawToken = authLine ? authLine.split(" ")[2] : null;
-                const token = rawToken ? sanitizeToken(rawToken) : null;
+                console.log('Auth line:', authLine);  // Debug log
+                let token = null;  // Declare token in outer scope
+                
+                if (authLine) {
+                    const parts = authLine.split("Bearer ");
+                    console.log('Auth parts:', parts);  // Debug log
+                    const rawToken = parts.length > 1 ? parts[1] : null;
+                    console.log('Raw token:', rawToken);  // Debug log
+                    token = rawToken ? sanitizeToken(rawToken) : null;
+                    console.log('Sanitized token:', token);  // Debug log
+                } else {
+                    console.log('No auth line found');  // Debug log
+                }
                 
                 if (!token) {
                     const body = JSON.stringify({ 
@@ -353,7 +421,7 @@ const server = net.createServer((l) => {
                     const response = [
                         "HTTP/1.1 401 Unauthorized",
                         "Content-Type: application/json",
-                        ...corsHeaders,
+                        ...corsHeaders(origin),
                         ...securityHeaders,
                         `Content-Length: ${Buffer.byteLength(body)}`,
                         "",
@@ -381,21 +449,24 @@ const server = net.createServer((l) => {
                     // Clear timeout since we got a response
                     clearTimeout(timeout);
                     
+                    const beData = await beResponse.json();
+                    console.log('Backend response:', beData);  // Debug log
+                    
                     if (!beResponse.ok) {
-                        throw new Error('You have already used your one-time Beasty GET request.');
+                        throw new Error(beData.message || 'Authentication failed');
                     }
 
-                    const beData = await beResponse.json();
                     // if token is good
                     const body = JSON.stringify({ 
                         message: `Hello ${beData.data?.username || 'user'}!`,
-                        userId: beData.data?.userId || null
+                        userId: beData.data?.userId || null,
+                        remainingRequests: beData.data?.remainingRequests || null
                     });
                     
                     const response = [
                         "HTTP/1.1 200 OK",
                         "Content-Type: application/json",
-                        ...corsHeaders,
+                        ...corsHeaders(origin),
                         ...securityHeaders,
                         `Content-Length: ${Buffer.byteLength(body)}`,
                         "",
@@ -406,15 +477,16 @@ const server = net.createServer((l) => {
                 })
                 .catch((err) => {
                     clearTimeout(timeout);
+                    console.error('Backend request error:', err);  // Debug log
                     const body = JSON.stringify({ 
-                        error: "Beasty Error", 
+                        error: "Authentication failed", 
                         details: err.message 
                     });
                     
                     const response = [
                         "HTTP/1.1 401 Unauthorized",
                         "Content-Type: application/json",
-                        ...corsHeaders,
+                        ...corsHeaders(origin),
                         ...securityHeaders,
                         `Content-Length: ${Buffer.byteLength(body)}`,
                         "",
@@ -429,13 +501,12 @@ const server = net.createServer((l) => {
                 return;
             }
 
-
     // actual endpoint hitting starts here, w a user asking for magic basically lol
              // Handle /beasty route
         if (i.startsWith("/beasty")) {
           // extracts authorization header from the incoming request lines
           const authLine = f.find(line => line.toLowerCase().startsWith("authorization:"));
-          const rawToken = authLine ? authLine.split(" ")[2] : null;
+          const rawToken = authLine ? authLine.split("Bearer ")[1] : null;  // Split by "Bearer " to get the token
           const token = rawToken ? sanitizeToken(rawToken) : null;
                  
     if (!token) {
@@ -446,7 +517,7 @@ const server = net.createServer((l) => {
         const response = [
             "HTTP/1.1 401 Unauthorized",
             "Content-Type: application/json",
-            ...corsHeaders,
+            ...corsHeaders(origin),
             ...securityHeaders,
             `Content-Length: ${Buffer.byteLength(body)}`,
             "",
@@ -508,89 +579,89 @@ const server = net.createServer((l) => {
     
     // Check if user wants to see their IP, we dont keep it so dont worry, we aint hungry dude
     const showIP = queryString.includes("withIP=true");
-                const metadata = {
-                    timestamp: new Date().toISOString(),
-                    userAgent,
-                    ip: showIP ? ip : "Only shown if you ask with ?withIP=true",
-                    note: "You're seeing this because you're authenticated. This request is real-time and tracked per user."
-                };
+    const metadata = {
+        timestamp: new Date().toISOString(),
+        userAgent,
+        ip: showIP ? ip : "Only shown if you ask with ?withIP=true",
+        note: "You're seeing this because you're authenticated. This request is real-time and tracked per user."
+    };
 
-                const userInfo = {
-                    firstRequestAt: beData.data?.firstRequestAt || null,
-                    serverUptime: `${beastyUptimeSeconds} seconds`,
-                    userId: beData.data?.userId || null
-                };
+    const userInfo = {
+        firstRequestAt: beData.data?.firstRequestAt || null,
+        serverUptime: `${beastyUptimeSeconds} seconds`,
+        userId: beData.data?.userId || null
+    };
 
-                const body = JSON.stringify({ metadata, userInfo });
-                
-                // Apply compression if enabled, gzip 
-                if (config.compression.enabled) {
-                    const compressedBody = zlib.gzipSync(body);
-                    const headers = [
-                        "HTTP/1.1 200 OK",
-                        "Content-Type: application/json",
-                        "Content-Encoding: gzip",
-                        ...corsHeaders,
-                        ...securityHeaders,
-                        `Content-Length: ${compressedBody.length}`,
-                        "",
-                        ""
-                    ].join("\r\n");
-                    l.write(headers);
-                    l.write(compressedBody);
-                } else {
-                    const headers = [
-                        "HTTP/1.1 200 OK",
-                        "Content-Type: application/json",
-                        ...corsHeaders,
-                        ...securityHeaders,
-                        `Content-Length: ${Buffer.byteLength(body)}`,
-                        "",
-                        body
-                    ].join("\r\n");
-                    l.write(headers);
-                }
-                l.end();
-            })
-            .catch((err) => {
-                clearTimeout(timeout);
-                const body = JSON.stringify({ 
-                    error: "Beasty Error", 
-                    details: "You have used all 4 of your allowed Beasty requests." 
-                });
-                
-                const response = [
-                    "HTTP/1.1 403 Forbidden",
-                    "Content-Type: application/json",
-                    ...corsHeaders,
-                    ...securityHeaders,
-                    `Content-Length: ${Buffer.byteLength(body)}`,
-                    "",
-                    body
-                ].join("\r\n");
-                
-                // Write response and end connection properly
-                l.write(response, () => {
-                l.end();
-                });
-            });
-            return;
-        }
-
-        // Default 404 response
-        const body = JSON.stringify({ error: "Not Found" });
-        const response = [
-            "HTTP/1.1 404 Not Found",
+    const body = JSON.stringify({ metadata, userInfo });
+    
+    // Apply compression if enabled, gzip 
+    if (config.compression.enabled) {
+        const compressedBody = zlib.gzipSync(body);
+        const headers = [
+            "HTTP/1.1 200 OK",
             "Content-Type: application/json",
-            ...corsHeaders,
+            "Content-Encoding: gzip",
+            ...corsHeaders(origin),
+            ...securityHeaders,
+            `Content-Length: ${compressedBody.length}`,
+            "",
+            ""
+        ].join("\r\n");
+        l.write(headers);
+        l.write(compressedBody);
+    } else {
+        const headers = [
+            "HTTP/1.1 200 OK",
+            "Content-Type: application/json",
+            ...corsHeaders(origin),
             ...securityHeaders,
             `Content-Length: ${Buffer.byteLength(body)}`,
             "",
             body
         ].join("\r\n");
-        l.write(response);
-        l.end();
+        l.write(headers);
+    }
+    l.end();
+})
+.catch((err) => {
+    clearTimeout(timeout);
+    const body = JSON.stringify({ 
+        error: "Beasty Error", 
+        details: "You have used all 4 of your allowed Beasty requests." 
     });
+    
+    const response = [
+        "HTTP/1.1 403 Forbidden",
+        "Content-Type: application/json",
+        ...corsHeaders(origin),
+        ...securityHeaders,
+        `Content-Length: ${Buffer.byteLength(body)}`,
+        "",
+        body
+    ].join("\r\n");
+    
+    // Write response and end connection properly
+    l.write(response, () => {
+    l.end();
+    });
+});
+return;
+}
+
+// Default 404 response
+const body = JSON.stringify({ error: "Not Found" });
+const response = [
+    "HTTP/1.1 404 Not Found",
+    "Content-Type: application/json",
+    ...corsHeaders(origin),
+    ...securityHeaders,
+    `Content-Length: ${Buffer.byteLength(body)}`,
+    "",
+    body
+].join("\r\n");
+l.write(response);
+l.end();
+});
 });
 
 // Helper function for user agent extraction, very impppp

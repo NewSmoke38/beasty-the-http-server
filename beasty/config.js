@@ -8,7 +8,7 @@ export const config = {
     // if CORS_ORIGINS is set in .env, split it by commas into an array
     // otherwise use ['http://localhost:3000']
     // the ?. is optional chaining to safely handle if CORS_ORIGINS is undefined
-    corsOrigins: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000', 'http://localhost:5173'],
+    corsOrigins: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5174'],
 
     // Rate limiting settings from IP
     rateLimit: {

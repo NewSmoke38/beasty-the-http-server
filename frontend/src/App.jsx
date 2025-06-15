@@ -5,8 +5,8 @@ import { authAPI } from './services/api';
 
 const HTTP_OPTIONS = [
   'GET / (Root Request)',
-  'GET /?ip= (Request Info)',
-  'GET /?ip=127.0.0.1 (Request Details)',
+  'GET /beasty (Request Info)',
+  'GET /beasty?withIP=true (Request Details)',
 ];
 
 function App() {
@@ -18,6 +18,7 @@ function App() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [user, setUser] = useState(null);
   const dropdownRef = useRef(null);
+  const [response, setResponse] = useState(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -49,9 +50,12 @@ function App() {
       
       if (response.success) {
         console.log('Login successful, setting user:', response);
-        // Store the entire response as user data for now
-        setUser(response);
-        console.log('User state after login:', response);
+        // Store the user data and token
+        setUser({
+          ...response.data.user,
+          token: response.data.accessToken
+        });
+        console.log('User state after login:', response.data);
         setShowLogin(false);
       } else {
         console.log('Login failed:', response.message);
@@ -77,6 +81,38 @@ function App() {
     setUser(null);
     console.log('User state cleared');
     console.log('=== Logout Process Completed ===');
+  };
+
+  const handleSendRequest = async () => {
+    try {
+      if (!user || !user.token) {
+        setResponse({ error: "Please login first" });
+        return;
+      }
+
+      const endpoint = httpOption.split(' ')[1];
+      console.log('Sending request to Beasty server:', endpoint);
+      
+      // Make request to Beasty server
+      const response = await fetch(`http://localhost:8000${endpoint}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Beasty server response:', data);
+      setResponse(data);
+    } catch (error) {
+      console.error('Beasty request failed:', error);
+      setResponse({ error: error.message || 'Request failed' });
+    }
   };
 
   return (
@@ -139,19 +175,25 @@ function App() {
             </div>
           )}
         </div>
-        {/* Terminal-like merged info box (now just prompt and cursor) */}
+        {/* Terminal-like merged info box */}
         <div className="beasty-info-merged-box terminal-box">
           <div className="terminal-line">
             <span className="terminal-user">beasty@server</span>:<span className="terminal-path">~$</span>
             <span className="terminal-command">
-              curl -i -H "Authorization: Bearer {user?.token || 'your_token_here'}" http://localhost:8000{httpOption.split(' ')[1]}
+              curl -i http://localhost:8000{httpOption.split(' ')[1]}
             </span>
             <span className="terminal-cursor">&nbsp;</span>
           </div>
+          {response && (
+            <div className="terminal-response">
+              <div className="response-header">Response:</div>
+              <pre>{JSON.stringify(response, null, 2)}</pre>
+            </div>
+          )}
         </div>
         {/* Footer navigation hints */}
         <div className="beasty-footer-nav">
-          <button className="beasty-send-btn" onClick={() => console.log('Sending request:', httpOption)}>
+          <button className="beasty-send-btn" onClick={handleSendRequest}>
             <span className="beasty-footer-hint beasty-footer-orange">[Enter→</span>Send<span className="beasty-footer-hint">]</span>
           </button>
           <span className="beasty-footer-hint">[Open→</span><a href="/docs" className="beasty-doc-link">Documentation</a><span className="beasty-footer-hint">]</span>
