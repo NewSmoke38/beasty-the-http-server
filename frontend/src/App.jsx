@@ -14,6 +14,11 @@ const HTTP_OPTIONS = [
   'GET /beasty?withIP=true'
 ];
 
+// Helper function to color JSON keys
+const colorizeJsonKeys = (jsonStr) => {
+  return jsonStr.replace(/"([^"]+)":/g, '<span style="color: #f6c177">"$1"</span>:');
+};
+
 function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
@@ -27,6 +32,12 @@ function App() {
   const [remainingRequests, setRemainingRequests] = useState(null);
   const [requestCount, setRequestCount] = useState(0);
   const [currentPage, setCurrentPage] = useState('main');
+  const [displayedCommand, setDisplayedCommand] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [showCursor, setShowCursor] = useState(false);
+  const [displayedResponse, setDisplayedResponse] = useState('');
+  const [isResponseTyping, setIsResponseTyping] = useState(false);
+  const [showResponseCursor, setShowResponseCursor] = useState(false);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -41,44 +52,81 @@ function App() {
 
   // Add cleanup interval with error handling
   useEffect(() => {
-    try {
-      // Initial cleanup
-      if (cleanupExpiredTokens()) {
-        setUser(null);
-        setRemainingRequests(null);
-        setRequestCount(0);
+    const interval = setInterval(() => {
+      try {
+        cleanupExpiredTokens();
+      } catch (error) {
+        console.error('Token cleanup error:', error);
       }
-
-      // Set up periodic cleanup every minute
-      const cleanupInterval = setInterval(() => {
-        try {
-          if (cleanupExpiredTokens()) {
-            setUser(null);
-            setRemainingRequests(null);
-            setRequestCount(0);
-          }
-        } catch (error) {
-          console.error('Error in token cleanup:', error);
-        }
-      }, 60000); // Check every minute
-
-      return () => clearInterval(cleanupInterval);
-    } catch (error) {
-      console.error('Error setting up token cleanup:', error);
-    }
+    }, 60000);
+    return () => clearInterval(interval);
   }, []);
 
-  // Add error boundary for token operations
+  // Handle token operations with error handling
   const handleTokenOperation = (operation) => {
     try {
       return operation();
     } catch (error) {
       console.error('Token operation error:', error);
-      setUser(null);
-      setRemainingRequests(null);
-      setRequestCount(0);
       return null;
     }
+  };
+
+  // Typing animation effect for command
+  useEffect(() => {
+    if (isTyping) {
+      setShowCursor(false);
+      const command = `curl -i http://localhost:8000${httpOption.split(' ')[1]}`;
+      let currentIndex = 0;
+      
+      const typingInterval = setInterval(() => {
+        if (currentIndex <= command.length) {
+          setDisplayedCommand(command.slice(0, currentIndex));
+          currentIndex++;
+        } else {
+          clearInterval(typingInterval);
+          setIsTyping(false);
+          setShowCursor(true);
+        }
+      }, 50);
+
+      return () => clearInterval(typingInterval);
+    }
+  }, [httpOption, isTyping]);
+
+  // Typing animation effect for response
+  useEffect(() => {
+    if (response) {
+      setIsResponseTyping(true);
+      setShowResponseCursor(false);
+      setShowCursor(false);
+      
+      // Convert response to string and colorize keys
+      const responseStr = JSON.stringify(response, null, 2);
+      let currentIndex = 0;
+      
+      const typingInterval = setInterval(() => {
+        if (currentIndex <= responseStr.length) {
+          const partialResponse = responseStr.slice(0, currentIndex);
+          setDisplayedResponse(colorizeJsonKeys(partialResponse));
+          currentIndex++;
+        } else {
+          clearInterval(typingInterval);
+          setIsResponseTyping(false);
+          setShowResponseCursor(true);
+        }
+      }, 20);
+
+      return () => clearInterval(typingInterval);
+    }
+  }, [response]);
+
+  // Handle dropdown selection
+  const handleOptionSelect = (option) => {
+    setHttpOption(option);
+    setIsDropdownOpen(false);
+    setIsTyping(true);
+    setShowResponseCursor(false); // Hide response cursor when new command starts
   };
 
   const handleLogin = async (e) => {
@@ -244,10 +292,7 @@ function App() {
                     <div
                       key={option}
                       className={`custom-dropdown-item ${option === httpOption ? 'selected' : ''}`}
-                      onClick={() => {
-                        setHttpOption(option);
-                        setIsDropdownOpen(false);
-                      }}
+                      onClick={() => handleOptionSelect(option)}
                     >
                       {option}
                     </div>
@@ -260,30 +305,16 @@ function App() {
               <div className="terminal-line">
                 <span className="terminal-user">beasty@server</span>:<span className="terminal-path">~$</span>
                 <span className="terminal-command">
-                  curl -i http://localhost:8000{httpOption.split(' ')[1]}
+                  {displayedCommand}
                 </span>
-                <span className="terminal-cursor">&nbsp;</span>
+                {showCursor && !isResponseTyping && <span className="terminal-cursor">&nbsp;</span>}
               </div>
               {response && (
                 <div className="terminal-response">
                   <div className="response-header">Response:</div>
-                  <pre>
-                    {Object.entries(response).map(([key, value]) => (
-                      <div key={key}>
-                        <span className="json-key">"{key}"</span>: {typeof value === 'object' && value !== null ? (
-                          <pre>
-                            {Object.entries(value).map(([nestedKey, nestedValue]) => (
-                              <div key={nestedKey} style={{ marginLeft: '20px' }}>
-                                <span className="json-key">"{nestedKey}"</span>: {typeof nestedValue === 'string' ? `"${nestedValue}"` : nestedValue}
-                              </div>
-                            ))}
-                          </pre>
-                        ) : (
-                          typeof value === 'string' ? `"${value}"` : value
-                        )}
-                      </div>
-                    ))}
+                  <pre dangerouslySetInnerHTML={{ __html: displayedResponse }}>
                   </pre>
+                  {showResponseCursor && <span className="terminal-cursor">&nbsp;</span>}
                 </div>
               )}
             </div>
@@ -297,7 +328,15 @@ function App() {
               >
                 <span className="beasty-footer-hint beasty-footer-orange">[Enter→</span>Send<span className="beasty-footer-hint">]</span>
               </button>
-              <span className="beasty-footer-hint">[Open→</span><a href="/docs" className="beasty-doc-link">Documentation</a><span className="beasty-footer-hint">]</span>
+              <span className="beasty-footer-hint">[Open→</span>
+              <span 
+                className="beasty-doc-link" 
+                onClick={() => setCurrentPage('lore')}
+                style={{ cursor: 'pointer' }}
+              >
+                Documentation
+              </span>
+              <span className="beasty-footer-hint">]</span>
             </div>
           </>
         );

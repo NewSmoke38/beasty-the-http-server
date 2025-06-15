@@ -1,6 +1,54 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
+/* Global styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Courier New', Courier, monospace;
+  background-color: #000;
+  color: #00ff00;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.App {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Reset and base styles */
 body, html, #root, .beasty-bg {
   background: #181c20;
@@ -13,16 +61,17 @@ body, html, #root, .beasty-bg {
   -moz-osx-font-smoothing: grayscale;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
 .beasty-bg {
-  width: 100vw;
+  width: 100%;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .beasty-topbar {
@@ -714,4 +763,59 @@ body, html, #root, .beasty-bg {
   flex-direction: column;
   align-items: center;
   gap: 2rem;
+}
+
+.password-input-container {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.password-strength {
+  margin-top: 5px;
+  font-size: 0.9em;
+  font-family: 'VT323', monospace;
+  transition: color 0.3s ease;
+}
+
+.password-requirements {
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  font-size: 0.8em;
+  color: #666;
+}
+
+.password-requirements small {
+  display: block;
+  margin-bottom: 5px;
+  color: #888;
+}
+
+.password-requirements ul {
+  list-style: none;
+  padding-left: 15px;
+  margin: 0;
+}
+
+.password-requirements li {
+  position: relative;
+  margin-bottom: 3px;
+  transition: color 0.3s ease;
+}
+
+.password-requirements li::before {
+  content: "•";
+  position: absolute;
+  left: -15px;
+  color: #ff4b6e;
+  transition: color 0.3s ease;
+}
+
+.password-requirements li.requirement-met {
+  color: #4bff4b;
+}
+
+.password-requirements li.requirement-met::before {
+  color: #4bff4b;
 }

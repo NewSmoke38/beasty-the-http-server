@@ -25,8 +25,15 @@ const userSchema = new Schema(
     password: {
         type: String,
         required: [true, 'Password is required'],
-        minlength: 6,
-        maxlength: 8
+        minlength: [8, 'Password must be at least 8 characters long'],
+        maxlength: [32, 'Password cannot exceed 32 characters'],
+        validate: {
+            validator: function(v) {
+                // At least one number, one special character, and one uppercase letter
+                return /^(?=.*[0-9])(?=.*[!@#$%^&*])(?=.*[A-Z]).{8,}$/.test(v);
+            },
+            message: 'Password must contain at least one number, one special character (!@#$%^&*), and one uppercase letter'
+        }
     },
     fullName: {
       type: String,

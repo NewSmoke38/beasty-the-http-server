@@ -44,10 +44,10 @@ It allows users to login, interact with 3 live endpoints, and retrieve real meta
 # User Guide
 ===========
 
-ALL reqs are GET 
+ALL requests are GET/ requests as for now - 
 1.The user registers or logs into Beasty.
 2.Upon successful login, a session is created and tracked.
-3.The frontend (Beasty UI) unlocks access to 3 GET endpoints powered by the Be server.
+3.The frontend (Beasty UI) unlocks access to 3 GET endpoints powered by the Backend server.
 
 
 # Available endpoints

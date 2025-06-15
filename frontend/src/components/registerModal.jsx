@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
 
 const RegisterModal = ({ onClose }) => {
@@ -11,6 +11,64 @@ const RegisterModal = ({ onClose }) => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState({
+    score: 0,
+    message: '',
+    color: '#ff4b6e'
+  });
+
+  const calculatePasswordStrength = (password) => {
+    let score = 0;
+    let message = '';
+    let color = '#ff4b6e'; // Default red
+
+    if (password.length >= 8) score += 1;
+    if (/[A-Z]/.test(password)) score += 1;
+    if (/[0-9]/.test(password)) score += 1;
+    if (/[!@#$%^&*]/.test(password)) score += 1;
+    if (password.length >= 12) score += 1;
+
+    switch (score) {
+      case 0:
+        message = 'Very Weak';
+        color = '#ff4b6e';
+        break;
+      case 1:
+        message = 'Weak';
+        color = '#ff6b6b';
+        break;
+      case 2:
+        message = 'Fair';
+        color = '#ffd93d';
+        break;
+      case 3:
+        message = 'Good';
+        color = '#6bff6b';
+        break;
+      case 4:
+        message = 'Strong';
+        color = '#4bff4b';
+        break;
+      case 5:
+        message = 'Very Strong';
+        color = '#00ff00';
+        break;
+      default:
+        message = 'Very Weak';
+        color = '#ff4b6e';
+    }
+
+    return { score, message, color };
+  };
+
+  const checkPasswordRequirements = (password) => {
+    return {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      number: /[0-9]/.test(password),
+      special: /[!@#$%^&*]/.test(password)
+    };
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,11 +76,30 @@ const RegisterModal = ({ onClose }) => {
       ...prev,
       [name]: value
     }));
+
+    if (name === 'password') {
+      setPasswordStrength(calculatePasswordStrength(value));
+    }
+  };
+
+  const validatePassword = (password) => {
+    const errors = [];
+    if (password.length < 8) errors.push('Password must be at least 8 characters long');
+    if (!/[A-Z]/.test(password)) errors.push('Password must contain at least one uppercase letter');
+    if (!/[0-9]/.test(password)) errors.push('Password must contain at least one number');
+    if (!/[!@#$%^&*]/.test(password)) errors.push('Password must contain at least one special character (!@#$%^&*)');
+    return errors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Register form submitted');
+    
+    const passwordErrors = validatePassword(formData.password);
+    if (passwordErrors.length > 0) {
+      setError(passwordErrors.join('\n'));
+      return;
+    }
     
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
@@ -97,18 +174,40 @@ const RegisterModal = ({ onClose }) => {
             required
             disabled={loading}
           />
-          <input
-            className="beasty-input"
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            minLength={6}
-            maxLength={8}
-            required
-            disabled={loading}
-          />
+          <div className="password-input-container">
+            <input
+              className="beasty-input"
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              minLength={8}
+              maxLength={32}
+              required
+              disabled={loading}
+            />
+            <div className="password-strength" style={{ color: passwordStrength.color }}>
+              {formData.password && `Strength: ${passwordStrength.message}`}
+            </div>
+            <div className="password-requirements">
+              <small>Password must contain:</small>
+              <ul>
+                <li className={formData.password.length >= 8 ? 'requirement-met' : ''}>
+                  At least 8 characters
+                </li>
+                <li className={/[A-Z]/.test(formData.password) ? 'requirement-met' : ''}>
+                  One uppercase letter
+                </li>
+                <li className={/[0-9]/.test(formData.password) ? 'requirement-met' : ''}>
+                  One number
+                </li>
+                <li className={/[!@#$%^&*]/.test(formData.password) ? 'requirement-met' : ''}>
+                  One special character (!@#$%^&*)
+                </li>
+              </ul>
+            </div>
+          </div>
           <input
             className="beasty-input"
             type="password"
@@ -116,15 +215,15 @@ const RegisterModal = ({ onClose }) => {
             placeholder="Confirm Password"
             value={formData.confirmPassword}
             onChange={handleChange}
-            minLength={6}
-            maxLength={8}
+            minLength={8}
+            maxLength={32}
             required
             disabled={loading}
           />
           <button 
             className="beasty-btn" 
             type="submit"
-            disabled={loading}
+            disabled={loading || passwordStrength.score < 3}
           >
             {loading ? 'Registering...' : 'Register'}
           </button>
