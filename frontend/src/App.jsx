@@ -143,6 +143,9 @@ function App() {
         <div className="beasty-info-merged-box terminal-box">
           <div className="terminal-line">
             <span className="terminal-user">beasty@server</span>:<span className="terminal-path">~$</span>
+            <span className="terminal-command">
+              curl -i -H "Authorization: Bearer {user?.token || 'your_token_here'}" http://localhost:8000{httpOption.split(' ')[1]}
+            </span>
             <span className="terminal-cursor">&nbsp;</span>
           </div>
         </div>

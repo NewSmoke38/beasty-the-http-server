@@ -22,6 +22,7 @@ body, html, #root, .beasty-bg {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
+  overflow-y: auto;
 }
 
 .beasty-topbar {
@@ -84,6 +85,7 @@ body, html, #root, .beasty-bg {
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-bottom: 2.5rem;
 }
 
 .beasty-center-content {
@@ -401,6 +403,10 @@ body, html, #root, .beasty-bg {
   display: flex;
   flex-direction: row;
   gap: 2.5rem;
+  width: 100%;
+  min-height: 60px;
+  overflow-y: auto;
+  max-height: 400px;
 }
 .beasty-info-merged-box .beasty-file-info,
 .beasty-info-merged-box .beasty-deps-box {
@@ -551,6 +557,12 @@ body, html, #root, .beasty-bg {
   51%, 100% { opacity: 0; }
 }
 
+.terminal-command {
+  color: #e0e0e0;
+  margin-left: 0.5rem;
+  font-family: 'Courier New', monospace;
+}
+
 .beasty-info-blue {
   color: #ff4b6e;
   margin-top: 20px;
@@ -577,18 +589,13 @@ body, html, #root, .beasty-bg {
 }
 
 .beasty-footer-love {
-  width: 100vw;
+  margin: 20px 0;
+  color: #666;
+  font-size: 0.9em;
+  background: #181c20;
+  padding: 10px 20px;
+  border-radius: 4px;
   text-align: center;
-  position: fixed;
-  left: 0;
-  bottom: 10px;
-  font-family: 'Press Start 2P', 'VT323', monospace;
-  font-size: 1rem;
-  color: #6c7a89;
-  letter-spacing: 0.05em;
-  opacity: 0.85;
-  z-index: 100;
-  pointer-events: none;
 }
 
 .beasty-doc-link {
