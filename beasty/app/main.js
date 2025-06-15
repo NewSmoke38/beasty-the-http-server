@@ -589,7 +589,8 @@ const server = net.createServer((l) => {
     const userInfo = {
         firstRequestAt: beData.data?.firstRequestAt || null,
         serverUptime: `${beastyUptimeSeconds} seconds`,
-        userId: beData.data?.userId || null
+        userId: beData.data?.userId || null,
+        remainingRequests: beData.data?.remainingRequests || null
     };
 
     const body = JSON.stringify({ metadata, userInfo });

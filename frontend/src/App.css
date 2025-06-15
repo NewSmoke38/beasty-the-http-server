@@ -626,12 +626,18 @@ body, html, #root, .beasty-bg {
   line-height: 1;
 }
 
-.beasty-send-btn:hover {
+.beasty-send-btn:hover:not(:disabled) {
   opacity: 0.8;
 }
 
-.beasty-send-btn:active {
+.beasty-send-btn:active:not(:disabled) {
   opacity: 0.6;
+}
+
+.beasty-send-btn-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .beasty-dot {
@@ -655,4 +661,41 @@ body, html, #root, .beasty-bg {
 .beasty-docs-ref {
   color: #7ed6df;
   font-weight: normal;
+}
+
+.json-key {
+  color: #f6c177 !important;
+  font-weight: bold;
+}
+
+.terminal-response pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: 'VT323', monospace;
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
+.remaining-requests {
+  margin-top: 15px;
+  padding: 10px 15px;
+  background: #1e2228;
+  border: 1px solid #444;
+  border-radius: 4px;
+  font-family: 'VT323', monospace;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.remaining-requests-text {
+  color: #b7c9ce;
+}
+
+.remaining-requests-count {
+  color: #f6c177;
+  font-weight: bold;
+  font-size: 1.2rem;
 }

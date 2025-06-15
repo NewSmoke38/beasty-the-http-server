@@ -12,13 +12,15 @@ const HTTP_OPTIONS = [
 function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
-  const [httpOption, setHttpOption] = useState(HTTP_OPTIONS[0]);
+  const [httpOption, setHttpOption] = useState("GET /");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [user, setUser] = useState(null);
   const dropdownRef = useRef(null);
   const [response, setResponse] = useState(null);
+  const [remainingRequests, setRemainingRequests] = useState(null);
+  const [requestCount, setRequestCount] = useState(0);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -79,6 +81,8 @@ function App() {
     console.log('=== Logout Process Started ===');
     console.log('Current user before logout:', user);
     setUser(null);
+    setRemainingRequests(null);
+    setRequestCount(0); // Reset request count on logout
     console.log('User state cleared');
     console.log('=== Logout Process Completed ===');
   };
@@ -89,6 +93,9 @@ function App() {
         setResponse({ error: "Please login first" });
         return;
       }
+
+      // Increment request count
+      setRequestCount(prev => prev + 1);
 
       const endpoint = httpOption.split(' ')[1];
       console.log('Sending request to Beasty server:', endpoint);
@@ -102,16 +109,40 @@ function App() {
         }
       });
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
       const data = await response.json();
       console.log('Beasty server response:', data);
-      setResponse(data);
+      
+      // Update remaining requests from the response
+      if (data.remainingRequests !== undefined) {
+        setRemainingRequests(data.remainingRequests);
+        // Remove remainingRequests from the response data
+        const { remainingRequests, ...responseData } = data;
+        setResponse(responseData);
+      } else if (data.userInfo?.remainingRequests !== undefined) {
+        setRemainingRequests(data.userInfo.remainingRequests);
+        // Remove remainingRequests from userInfo
+        const { remainingRequests, ...userInfo } = data.userInfo;
+        setResponse({ ...data, userInfo });
+      } else if (data.metadata?.remainingRequests !== undefined) {
+        setRemainingRequests(data.metadata.remainingRequests);
+        // Remove remainingRequests from metadata
+        const { remainingRequests, ...metadata } = data.metadata;
+        setResponse({ ...data, metadata });
+      } else {
+        setResponse(data);
+      }
+
+      // If we get a 429 status, set remaining requests to 0
+      if (!response.ok && response.status === 429) {
+        setRemainingRequests(0);
+        throw new Error(`[You have used all your beasty requests] status: ${response.status}`);
+      }
     } catch (error) {
       console.error('Beasty request failed:', error);
       setResponse({ error: error.message || 'Request failed' });
+      if (error.message.includes('all your beasty requests')) {
+        setRemainingRequests(0);
+      }
     }
   };
 
@@ -187,13 +218,34 @@ function App() {
           {response && (
             <div className="terminal-response">
               <div className="response-header">Response:</div>
-              <pre>{JSON.stringify(response, null, 2)}</pre>
+              <pre>
+                {Object.entries(response).map(([key, value]) => (
+                  <div key={key}>
+                    <span className="json-key">"{key}"</span>: {typeof value === 'object' && value !== null ? (
+                      <pre>
+                        {Object.entries(value).map(([nestedKey, nestedValue]) => (
+                          <div key={nestedKey} style={{ marginLeft: '20px' }}>
+                            <span className="json-key">"{nestedKey}"</span>: {typeof nestedValue === 'string' ? `"${nestedValue}"` : nestedValue}
+                          </div>
+                        ))}
+                      </pre>
+                    ) : (
+                      typeof value === 'string' ? `"${value}"` : value
+                    )}
+                  </div>
+                ))}
+              </pre>
             </div>
           )}
         </div>
         {/* Footer navigation hints */}
         <div className="beasty-footer-nav">
-          <button className="beasty-send-btn" onClick={handleSendRequest}>
+          <button 
+            className={`beasty-send-btn ${requestCount >= 5 ? 'beasty-send-btn-disabled' : ''}`}
+            onClick={requestCount >= 5 ? undefined : handleSendRequest}
+            disabled={requestCount >= 5}
+            style={{ pointerEvents: requestCount >= 5 ? 'none' : 'auto' }}
+          >
             <span className="beasty-footer-hint beasty-footer-orange">[Enter→</span>Send<span className="beasty-footer-hint">]</span>
           </button>
           <span className="beasty-footer-hint">[Open→</span><a href="/docs" className="beasty-doc-link">Documentation</a><span className="beasty-footer-hint">]</span>
