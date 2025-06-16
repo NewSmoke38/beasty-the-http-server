@@ -7,10 +7,13 @@ const app = express();
 
 // CORS Configuration
 app.use(cors({
-    origin: ["http://localhost:3000", "http://localhost:5174"],   /// here will come our vercel linkkkk
+    origin: [
+        "https://beasty-frontend.vercel.app" // 
+        "http://localhost:3000",
+        "http://localhost:5174",
+    ],
     credentials: true
 }));
-
 app.use(express.json({limit: "16kb"}))    // middleware is needed for JSON 
 global.serverStartTime = Date.now();
 
