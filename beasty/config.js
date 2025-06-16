@@ -9,7 +9,8 @@ export const config = {
     // otherwise use development origins
     corsOrigins: process.env.CORS_ORIGINS?.split(',') || [
         'http://localhost:5174',
-        'http://localhost:3000'
+        'http://localhost:3000',
+        'https://beasty-frontend.vercel.app'
     ],
 
     // Rate limiting settings from IP

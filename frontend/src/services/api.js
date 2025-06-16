@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-const API_URL =
-  process.env.NODE_ENV === 'production'
-    ? 'https://beasty-backend.onrender.com'
-    : 'http://localhost:8000';
+const BEASTY_SERVER_URL = import.meta.env.VITE_BEASTY_SERVER_URL;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://beasty-backend.onrender.com';
 console.log('API URL:', API_URL); 
 
 const api = axios.create({
