@@ -8,7 +8,6 @@ export const config = {
     // if CORS_ORIGINS is set in .env, split it by commas into an array
     // otherwise use development origins
     corsOrigins: process.env.CORS_ORIGINS?.split(',') || [
-        'http://localhost:5173',
         'http://localhost:5174',
         'http://localhost:3000'
     ],

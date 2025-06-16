@@ -57,36 +57,23 @@ function extractOrigin(headers) {
     return originValue;
 }
 
-// CORS headers
-// allows specific websites to access your server
-const corsHeaders = (origin) => {
-    // For development, allow all localhost origins
-    if (origin && origin.startsWith('http://localhost:')) {
-        return [
-            "Access-Control-Allow-Origin: " + origin,
-            "Access-Control-Allow-Methods: GET, OPTIONS",
-            "Access-Control-Allow-Headers: Content-Type, Authorization",
-            "Access-Control-Max-Age: 86400"
-        ];
-    }
+// CORS headers function
+function corsHeaders(origin) {
+    // If no origin provided, return empty array
+    if (!origin) return [];
 
-    // For production, check against allowed origins
-    if (!origin || !config.corsOrigins.includes(origin)) {
-        return [
-            "Access-Control-Allow-Origin: " + config.corsOrigins[0],
-            "Access-Control-Allow-Methods: GET, OPTIONS",
-            "Access-Control-Allow-Headers: Content-Type, Authorization",
-            "Access-Control-Max-Age: 86400"
-        ];
-    }
-
+    // Check if origin is in allowed list
+    const isAllowed = config.corsOrigins.includes(origin);
+    
+    // Return CORS headers with the actual request origin if allowed
     return [
-        "Access-Control-Allow-Origin: " + origin,
-        "Access-Control-Allow-Methods: GET, OPTIONS",
-        "Access-Control-Allow-Headers: Content-Type, Authorization",
-        "Access-Control-Max-Age: 86400"
+        `Access-Control-Allow-Origin: ${isAllowed ? origin : config.corsOrigins[0]}`,
+        "Access-Control-Allow-Methods: GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers: Content-Type, Authorization, Accept",
+        "Access-Control-Allow-Credentials: true",
+        "Access-Control-Max-Age: 86400" // 24 hours
     ];
-};
+}
 
 //  protection against common web vulnerabilities
 const securityHeaders = [
@@ -363,20 +350,17 @@ const server = net.createServer((l) => {
     const allowedMethods = ["GET", "OPTIONS"];
 
     if (j === "OPTIONS") {
+        const origin = f.find(line => line.toLowerCase().startsWith("origin:"))?.split(":")[1]?.trim();
+        console.log('Preflight request from origin:', origin); // Debug log
+        
         const response = [
             "HTTP/1.1 204 No Content",
-            
-            // Add our CORS headers so browser knows what's allowed
             ...corsHeaders(origin),
-            
-            // Add security headers
             ...securityHeaders,
-            
-            // Since there's no content, length is 0
-            "Content-Length: 0",
             "",
             ""
         ].join("\r\n");
+        
         l.write(response);
         l.end();
         return;
@@ -575,7 +559,7 @@ const server = net.createServer((l) => {
     );
     
     // Get the user's browser/device info
-    const userAgent = extractUserAgent(f);          // oooo shady, actually 
+    const userAgent = extractUserAgent(f);
     
     // Get the user's IP address
     const ip = l.remoteAddress || "Unknown";
@@ -584,8 +568,9 @@ const server = net.createServer((l) => {
     const urlParts = i.split("?");
     const queryString = urlParts[1] || "";
     
-    // Check if user wants to see their IP, we dont keep it so dont worry, we aint hungry dude
+    // Check if user wants to see their IP
     const showIP = queryString.includes("withIP=true");
+    
     const metadata = {
         timestamp: new Date().toISOString(),
         userAgent,
