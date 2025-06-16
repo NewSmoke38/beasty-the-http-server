@@ -12,7 +12,7 @@ export default defineConfig({
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com;
         font-src 'self' https://fonts.gstatic.com;
         img-src * data: blob:;
-        connect-src 'self' http://localhost:4000 http://localhost:8000 https://beasty-server.onrender.com;
+        connect-src 'self' https://beasty-backend.onrender.com http://localhost:4000 http://localhost:8000;
       `.replace(/\s+/g, ' ').trim()
     }
   }
