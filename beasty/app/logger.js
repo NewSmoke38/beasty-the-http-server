@@ -42,7 +42,6 @@ function logRequest(ip, method, requestPath, statusCode, userAgent, timestamp) {
         method,
         path: requestPath,
         statusCode,
-        userAgent
         // IP address removed for privacy (chad)
     };
 

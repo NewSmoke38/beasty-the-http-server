@@ -716,17 +716,27 @@ body, html, #root, .beasty-bg {
 }
 
 .json-key {
-  color: #f6c177 !important;
-  font-weight: bold;
+  font-family: 'Courier New', monospace !important;
+  font-size: 1.1rem !important;
+  font-weight: bold !important;
+  color: #7ed6df !important;
 }
 
 .terminal-response pre {
-  margin: 0;
+  font-family: 'Courier New', monospace !important;
+  font-size: 1.1rem !important;
+  line-height: 1.4 !important;
+  font-weight: bold !important;
   white-space: pre-wrap;
   word-wrap: break-word;
-  font-family: 'VT323', monospace;
-  font-size: 1.1rem;
-  line-height: 1.4;
+  margin: 0;
+}
+
+.terminal-response pre * {
+  font-family: 'Courier New', monospace !important;
+  font-size: 1.1rem !important;
+  line-height: 1.4 !important;
+  font-weight: bold !important;
 }
 
 .terminal-heading {
@@ -818,4 +828,36 @@ body, html, #root, .beasty-bg {
 
 .password-requirements li.requirement-met::before {
   color: #4bff4b;
+}
+
+.title {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.9rem !important;
+  color: #7ed6df;
+  text-align: center;
+  margin-bottom: 2rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  line-height: 1.6;
+}
+
+.animated-text {
+  font-family: 'Courier New', monospace !important;
+  font-size: 1.3rem !important;
+  font-weight: bold !important;
+  color: #4bff4b;
+  text-shadow: 0 0 5px rgba(75, 255, 75, 0.5);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  border-right: 2px solid #4bff4b;
+  animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+}
+
+.ascii-favicon {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #7ed6df;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+  text-shadow: 0 0 5px rgba(126, 214, 223, 0.5);
 }

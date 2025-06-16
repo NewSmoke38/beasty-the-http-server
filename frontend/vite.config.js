@@ -9,9 +9,9 @@ export default defineConfig({
       'Content-Security-Policy': `
         default-src 'self';
         script-src 'self' 'unsafe-eval' 'unsafe-inline';
-        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-        style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com;
         font-src 'self' https://fonts.gstatic.com;
+        img-src * data: blob:;
         connect-src 'self' http://localhost:4000 http://localhost:8000;
       `.replace(/\s+/g, ' ').trim()
     }

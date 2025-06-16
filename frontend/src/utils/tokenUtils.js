@@ -1,24 +1,4 @@
-// Import jwt-decode with proper error handling
-let jwtDecode;
-try {
-  jwtDecode = require('jwt-decode').default;
-} catch (error) {
-  console.error('Error importing jwt-decode:', error);
-  // Fallback implementation
-  jwtDecode = (token) => {
-    try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-      return JSON.parse(jsonPayload);
-    } catch (error) {
-      console.error('Error decoding token:', error);
-      return { exp: 0 };
-    }
-  };
-}
+import { jwtDecode } from 'jwt-decode';
 
 // Check if token is expired
 export const isTokenExpired = (token) => {
@@ -57,4 +37,42 @@ export const getTokenExpirationTime = (token) => {
     console.error('Error getting token expiration:', error);
     return 0;
   }
+};
+
+export const getToken = () => {
+    return localStorage.getItem('token');
+};
+
+export const setToken = (token) => {
+    localStorage.setItem('token', token);
+};
+
+export const removeToken = () => {
+    localStorage.removeItem('token');
+};
+
+export const isTokenValid = () => {
+    const token = getToken();
+    if (!token) return false;
+    
+    try {
+        const decoded = jwtDecode(token);
+        const currentTime = Date.now() / 1000;
+        return decoded.exp > currentTime;
+    } catch (error) {
+        console.error('Error decoding token:', error);
+        return false;
+    }
+};
+
+export const getDecodedToken = () => {
+    const token = getToken();
+    if (!token) return null;
+    
+    try {
+        return jwtDecode(token);
+    } catch (error) {
+        console.error('Error decoding token:', error);
+        return null;
+    }
 }; 

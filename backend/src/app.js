@@ -7,7 +7,7 @@ const app = express();
 
 // CORS Configuration
 app.use(cors({
-    origin: ["http://localhost:3000", "http://localhost:5174"],   /// here will come our vercel linkkkk
+    origin: ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"],   /// here will come our vercel linkkkk
     credentials: true
 }));
 

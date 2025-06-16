@@ -60,10 +60,18 @@ function extractOrigin(headers) {
 // CORS headers
 // allows specific websites to access your server
 const corsHeaders = (origin) => {
-    console.log('CORS headers called with origin:', origin);  // Debug log
-    console.log('Allowed origins:', config.corsOrigins);  // Debug log
+    // For development, allow all localhost origins
+    if (origin && origin.startsWith('http://localhost:')) {
+        return [
+            "Access-Control-Allow-Origin: " + origin,
+            "Access-Control-Allow-Methods: GET, OPTIONS",
+            "Access-Control-Allow-Headers: Content-Type, Authorization",
+            "Access-Control-Max-Age: 86400"
+        ];
+    }
+
+    // For production, check against allowed origins
     if (!origin || !config.corsOrigins.includes(origin)) {
-        console.log('Origin not allowed, using first allowed origin');  // Debug log
         return [
             "Access-Control-Allow-Origin: " + config.corsOrigins[0],
             "Access-Control-Allow-Methods: GET, OPTIONS",
@@ -71,12 +79,11 @@ const corsHeaders = (origin) => {
             "Access-Control-Max-Age: 86400"
         ];
     }
-    console.log('Using exact origin:', origin);  // Debug log
+
     return [
         "Access-Control-Allow-Origin: " + origin,
         "Access-Control-Allow-Methods: GET, OPTIONS",
         "Access-Control-Allow-Headers: Content-Type, Authorization",
-            // for how much time should the browser cache these data, we will do it for 24 hrs
         "Access-Control-Max-Age: 86400"
     ];
 };
