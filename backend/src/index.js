@@ -3,7 +3,11 @@ import dotenv from "dotenv";
 import connectDB from "./db/index.js";
 import app from './app.js';
 
-dotenv.config(); 
+dotenv.config({
+  path: process.env.NODE_ENV === 'production' 
+    ? '.env.production' 
+    : '.env'
+});
 
 async function startServer() {
   try {

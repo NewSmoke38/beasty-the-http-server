@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:4000/api/v1/users';
+const API_URL = 'https://beasty-backend.onrender.com';
 console.log('API URL:', API_URL); 
 
 const api = axios.create({

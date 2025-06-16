@@ -3,7 +3,7 @@ export const config = {
     port: process.env.PORT || 8000,
 
     // if BACKEND_URL is set in .env, use that otherwise use localhost:4000
-    backendUrl: process.env.BACKEND_URL || 'http://localhost:4000',
+    backendUrl: process.env.BACKEND_URL || 'https://beasty-backend.onrender.com',
 
     // if CORS_ORIGINS is set in .env, split it by commas into an array
     // otherwise use development origins
