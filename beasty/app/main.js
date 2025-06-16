@@ -1,10 +1,10 @@
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-const net = require("net");
-const zlib = require("zlib");       // for gzip compression
-const { config } = require('../config.js');
-const jwt = require('jsonwebtoken');
-const { logRequest } = require('./logger');
-const os = require('os');  // this to get system info
+import fetch from 'node-fetch';
+import net from 'net';
+import zlib from 'zlib';
+import { config } from '../config.js';
+import jwt from 'jsonwebtoken';
+import { logRequest } from './logger.js';
+import os from 'os';
 
 // Get system username
 const systemUsername = os.userInfo().username;

@@ -1,5 +1,10 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Create logs directory with restricted permissions (700 = rwx------)
 const logsDir = path.join(__dirname, '..', 'logs');
@@ -36,7 +41,7 @@ setInterval(cleanupOldLogs, 24 * 60 * 60 * 1000);
 
 cleanupOldLogs();
 
-function logRequest(ip, method, requestPath, statusCode, userAgent, timestamp) {
+export function logRequest(ip, method, requestPath, statusCode, userAgent, timestamp) {
     const logEntry = {
         timestamp: timestamp || new Date().toISOString(),
         method,
@@ -55,6 +60,4 @@ function logRequest(ip, method, requestPath, statusCode, userAgent, timestamp) {
 
     // Append log entry to file
     fs.appendFileSync(logFile, JSON.stringify(logEntry) + '\n');
-}
-
-module.exports = { logRequest }; 
+} 
