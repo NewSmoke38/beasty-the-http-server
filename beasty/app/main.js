@@ -64,8 +64,8 @@ function corsHeaders(origin) {
     // Return CORS headers with the actual request origin if allowed
     return [
         `Access-Control-Allow-Origin: ${isAllowed ? origin : config.corsOrigins[0]}`,
-        "Access-Control-Allow-Methods: GET, POST, OPTIONS",
-        "Access-Control-Allow-Headers: Content-Type, Authorization, Accept",
+        "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH",
+        "Access-Control-Allow-Headers: Content-Type, Authorization, Accept, X-Requested-With, Origin, X-CSRF-Token",
         "Access-Control-Allow-Credentials: true",
         "Access-Control-Max-Age: 86400" // 24 hours
     ];
