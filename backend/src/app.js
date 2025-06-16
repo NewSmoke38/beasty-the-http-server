@@ -8,9 +8,9 @@ const app = express();
 // CORS Configuration
 app.use(cors({
     origin: [
-        "https://beasty-frontend.vercel.app" // 
         "http://localhost:3000",
         "http://localhost:5174",
+        "https://beasty-frontend.vercel.app"
     ],
     credentials: true
 }));
