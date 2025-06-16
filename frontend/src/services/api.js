@@ -65,4 +65,13 @@ export const authAPI = {
   }
 };
 
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err); // This will log the real error to your Render logs
+  res.status(err.status || 500).json({
+    message: err.message || 'Internal Server Error',
+    status: err.status || 500
+  });
+});
 export default api; 
