@@ -5,6 +5,7 @@ import { authAPI } from './services/api';
 import DNA from './components/DNA';
 import Logs from './components/Logs';
 import Lore from './components/Lore';
+import Arch from './components/Arch';
 import Favicon from './components/Favicon';
 import { isTokenExpired, cleanupExpiredTokens, getTokenExpirationTime } from './utils/tokenUtils';
 
@@ -260,6 +261,8 @@ function App() {
         return <Logs />;
       case 'lore':
         return <Lore />;
+      case 'arch':
+        return <Arch />;
       default:
         return (
           <>
@@ -372,6 +375,12 @@ function App() {
             onClick={() => setCurrentPage('lore')}
           >
             Lore
+          </span>
+          <span 
+            className={`beasty-tab ${currentPage === 'arch' ? 'beasty-tab-active' : ''}`}
+            onClick={() => setCurrentPage('arch')}
+          >
+            Arch
           </span>
         </span>
         <span className="beasty-auth-btns">
