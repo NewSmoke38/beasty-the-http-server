@@ -103,8 +103,6 @@ All security settings are configurable in config.js:
 - Timeouts
 - Compression
 
-> Security is not a feature, it's a process.
-------------------------------------------
 
 > Every request is validated, every response is secured.
 ----------------------------------------------------`}
