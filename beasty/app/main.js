@@ -1,15 +1,13 @@
-import fetch from 'node-fetch';
-import net from 'net';
-import zlib from 'zlib';
-import { config } from '../config.js';
-import jwt from 'jsonwebtoken';
-import { logRequest } from './logger.js';
-import os from 'os';
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const net = require("net");
+const zlib = require("zlib");       // for gzip compression
+const { config } = require('../config.js');
+const jwt = require('jsonwebtoken');
+const { logRequest } = require('./logger');
+const os = require('os');  // this to get system info
 
 // Get system username
 const systemUsername = os.userInfo().username;
-console.log("System username:", systemUsername);  // Debug log
-
 console.log("Logs from your program will appear here!");
 
 // Input sanitization functions
@@ -48,9 +46,7 @@ function sanitizeQueryParams(queryString) {
 
 // Function to extract origin from request headers
 function extractOrigin(headers) {
-    console.log('All headers:', headers);  // Debug log
     const origin = headers.find(h => h.toLowerCase().startsWith('origin:'));
-    console.log('Found origin:', origin);  // Debug log
     if (!origin) return null;
     const originValue = origin.split(':')[1].trim();
     console.log('Extracted origin value:', originValue);  // Debug log
@@ -148,6 +144,7 @@ process.on('SIGTERM', () => {
 
 global.beastyStartTime = Date.now();        // shows server up time of beasty
 
+
 // beasty making startsss
 // Create a new TCP server using Node's net module
 // 'l' is the socket connection for each client
@@ -155,10 +152,8 @@ const server = net.createServer((l) => {
     l.on("data", (b) => {
         const ip = l.remoteAddress;
         const requestData = b.toString();
-        console.log('Raw request data:', requestData);  // Debug log
         const headers = requestData.split('\r\n');
         const origin = extractOrigin(headers);
-        console.log('Extracted origin:', origin);  // Debug log
         
         // Handle preflight requests
         // special req by broswers made before actual ones to check if the actual reqs a re allowed, its [option]
@@ -269,9 +264,7 @@ const server = net.createServer((l) => {
         // rawPath = the requested path (/beasty, /echo, etc.)
         // q = HTTP version (HTTP/1.1)
         const requestLine = headers[0];  // Get the first line which contains the method
-        console.log('Request line:', requestLine);  // Debug log
         const [j, rawPath, q] = requestLine.split(" ");
-        console.log('Parsed method:', j);  // Debug log
 
         // sanitize the path and query parameters
         const [path, queryString] = rawPath.split('?');
