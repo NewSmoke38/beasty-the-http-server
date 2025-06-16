@@ -640,14 +640,26 @@ body, html, #root, .beasty-bg {
   }
 }
 
+.beasty-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
 .beasty-footer-love {
-  margin: 20px 0;
-  color: #666;
-  font-size: 0.9em;
-  background: #181c20;
-  padding: 10px 20px;
-  border-radius: 4px;
-  text-align: center;
+  color: #b7c9ce;
+  font-size: 0.9rem;
+  font-family: 'Press Start 2P', 'VT323', monospace;
+}
+
+.beasty-visitor-count {
+  color: #7ed6df;
+  font-family: 'Press Start 2P', 'VT323', monospace;
+  font-size: 0.9rem;
+  opacity: 0.8;
 }
 
 .beasty-doc-link {

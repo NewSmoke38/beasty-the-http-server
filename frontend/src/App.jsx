@@ -39,6 +39,7 @@ function App() {
   const [displayedResponse, setDisplayedResponse] = useState('');
   const [isResponseTyping, setIsResponseTyping] = useState(false);
   const [showResponseCursor, setShowResponseCursor] = useState(false);
+  const [visitorCount, setVisitorCount] = useState(0);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -253,6 +254,18 @@ function App() {
     }
   };
 
+  // Add effect to increment visitor count
+  useEffect(() => {
+    // Get the current count from localStorage or start at 0
+    const currentCount = parseInt(localStorage.getItem('visitorCount') || '0');
+    // Increment the count
+    const newCount = currentCount + 1;
+    // Save to localStorage
+    localStorage.setItem('visitorCount', newCount.toString());
+    // Update state
+    setVisitorCount(newCount);
+  }, []); // Run only once when component mounts
+
   const renderPage = () => {
     switch (currentPage) {
       case 'dna':
@@ -435,7 +448,10 @@ function App() {
         </div>
       )}
       {/* Made with love footer */}
-      <div className="beasty-footer-love">[with <span className="beasty-heart">♥</span> by <span className="beasty-author">chxshi</span>]</div>
+      <div className="beasty-footer">
+        <div className="beasty-footer-love">[with <span className="beasty-heart">♥</span> by <span className="beasty-author">chxshi</span>]</div>
+        <div className="beasty-visitor-count">visitors: {visitorCount}</div>
+      </div>
     </div>
   );
 }
