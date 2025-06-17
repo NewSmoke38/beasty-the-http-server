@@ -81,7 +81,7 @@ function corsHeaders(origin) {
     if (!origin) {
         console.log('No origin provided, using default CORS headers');
         return [
-            "Access-Control-Allow-Origin: *",
+            "Access-Control-Allow-Origin: https://beasty-frontend.vercel.app",
             "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH",
             "Access-Control-Allow-Headers: Content-Type, Authorization, Accept, X-Requested-With, Origin, X-CSRF-Token",
             "Access-Control-Allow-Credentials: true",
