@@ -194,24 +194,19 @@ const server = net.createServer((l) => {
             origin
         });
 
-        // Automatically set admin for localhost
-        let isAdmin = ip === '127.0.0.1' || ip === 'localhost';
+        // Extract and verify JWT token
+        const authHeader = headers.find(h => h.toLowerCase().startsWith('authorization:'));
+        let isAdmin = false;
         
-        // If not localhost, check JWT token
-        if (!isAdmin) {
-            const authHeader = headers.find(h => h.toLowerCase().startsWith('authorization:'));
-            if (authHeader) {
-                const token = authHeader.split(' ')[1];
-                try {
-                    const decoded = jwt.verify(token, config.jwtSecret);
-                    isAdmin = decoded.role === 'admin';
-                    console.log('User role:', decoded.role);
-                } catch (error) {
-                    console.log('JWT verification failed:', error.message);
-                }
+        if (authHeader) {
+            const token = authHeader.split(' ')[1];
+            try {
+                const decoded = jwt.verify(token, config.jwtSecret);
+                isAdmin = decoded.role === 'admin';
+                console.log('User role:', decoded.role);
+            } catch (error) {
+                console.log('JWT verification failed:', error.message);
             }
-        } else {
-            console.log('Localhost request - automatically granted admin access');
         }
 
         // Handle preflight requests
@@ -378,9 +373,9 @@ const server = net.createServer((l) => {
             
             // When rate limit is exceeded (5th request)
             if (userRequests.count > config.rateLimit.max) {
-                // Block the IP for 3 minutes
+                // Block the IP for 7 days (was 3 minutes)
                 ipBlockList.set(ip, {
-                    blockedUntil: Date.now() + (3 * 60 * 1000), // 3 minutes
+                    blockedUntil: Date.now() + (7 * 24 * 60 * 60 * 1000), // 7 days
                     violations: (ipBlockList.get(ip)?.violations || 0) + 1
                 });
 
