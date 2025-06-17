@@ -3,10 +3,11 @@
 A custom HTTP server written from scratch using raw TCP sockets — with a heavy focus on security, rate limiting, and controlled request flows.
 
 ### You can:
-	1.	Log in securely via JWT
-	2.	Hit 3 predefined endpoints
-	3.	View your own request metadata
-	4.	And do it all within a 4 requests/week/IP limit
+
+- Log in securely via JWT
+- Hit 3 predefined endpoints
+- View your own request metadata
+- And do it all within a 4 requests/week/IP limit
 
 Strict? Yeah. But that’s the point.
 
@@ -29,9 +30,9 @@ Splits them into its HTTP method, path, headers, body, and version.
 1. JWT-authenticated requests only (made a whole separate backend folder for this)
 
 2. 3 hardcoded endpoints:
-	>	/greeting
-	>	/beasty — user metadata (no IP)
-	>	/beasty?withIP=true — full metadata (with IP)
+	-	/greeting
+	-	/beasty — user metadata (no IP)
+	-	/beasty?withIP=true — full metadata (with IP)
 
 3.	No user can hit custom URLs. Only these endpoints are allowed. That’s not a bug, that’s a feature. For atmost security.
 
