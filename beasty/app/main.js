@@ -56,7 +56,16 @@ function extractOrigin(headers) {
 // CORS headers function
 function corsHeaders(origin) {
     // If no origin provided, return empty array
-    if (!origin) return [];
+    if (!origin) {
+        console.log('No origin provided');
+        return [
+            "Access-Control-Allow-Origin: *",
+            "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH",
+            "Access-Control-Allow-Headers: Content-Type, Authorization, Accept, X-Requested-With, Origin, X-CSRF-Token",
+            "Access-Control-Allow-Credentials: true",
+            "Access-Control-Max-Age: 86400"
+        ];
+    }
 
     // Normalize the origin by trimming and converting to lowercase
     const normalizedOrigin = origin.trim().toLowerCase();
@@ -72,13 +81,13 @@ function corsHeaders(origin) {
         isAllowed
     });
     
-    // Return CORS headers with the actual request origin if allowed
+    // Always return the actual origin in the header
     return [
-        `Access-Control-Allow-Origin: ${isAllowed ? origin : config.corsOrigins[0]}`,
+        `Access-Control-Allow-Origin: ${origin}`,
         "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH",
         "Access-Control-Allow-Headers: Content-Type, Authorization, Accept, X-Requested-With, Origin, X-CSRF-Token",
         "Access-Control-Allow-Credentials: true",
-        "Access-Control-Max-Age: 86400" // 24 hours
+        "Access-Control-Max-Age: 86400"
     ];
 }
 
@@ -167,15 +176,19 @@ const server = net.createServer((l) => {
         const origin = extractOrigin(headers);
         
         // Handle preflight requests
-        // special req by broswers made before actual ones to check if the actual reqs a re allowed, its [option]
         if (requestData.startsWith('OPTIONS')) {
-            console.log('Handling preflight request');  // Debug log
+            console.log('Handling preflight request from origin:', origin);
+            
+            // Always respond to preflight with 204 and CORS headers
             const response = [
                 "HTTP/1.1 204 No Content",
+                "Content-Type: text/plain",
                 ...corsHeaders(origin),
                 "",
                 ""
             ].join("\r\n");
+            
+            console.log('Preflight response:', response);
             
             l.write(response, () => {
                 l.destroy();
