@@ -60,7 +60,7 @@ function App() {
       } catch (error) {
         console.error('Token cleanup error:', error);
       }
-    }, 60000);
+    }, 10800000);
     return () => clearInterval(interval);
   }, []);
 
@@ -305,7 +305,7 @@ function App() {
               <div className="beasty-desc beasty-desc-secondary">No frameworks. No shortcuts. Just raw code.</div>
               <div className="beasty-info-blue">4 requests only. No retries.</div>
               <div className="beasty-desc" style={{ marginTop: '25px' }}>
-                Lore <span className="beasty-docs-ref">(AKA Docs)</span> explain how it works.
+                Lore explain how it works.
               </div>
               <div className="beasty-desc beasty-desc-secondary" style={{ fontSize: '0.9rem', marginTop: '5px' }}>
                 (recommended to read first, then try)
@@ -363,12 +363,8 @@ function App() {
                 <span className="beasty-footer-hint beasty-footer-orange">[Enter→</span>Send<span className="beasty-footer-hint">]</span>
               </button>
               <span className="beasty-footer-hint">[Open→</span>
-              <span 
-                className="beasty-doc-link" 
-                onClick={() => setCurrentPage('lore')}
-                style={{ cursor: 'pointer' }}
-              >
-                Documentation
+              <span className="beasty-doc-link">
+                <a href="https://www.notion.so/your-notion-blog-link" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>Documentation</a>
               </span>
               <span className="beasty-footer-hint">]</span>
             </div>

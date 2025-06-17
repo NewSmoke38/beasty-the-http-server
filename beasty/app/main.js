@@ -24,6 +24,18 @@ function sanitizePath(path) {
     return path;
 }
 
+// Helper function to normalize IP addresses
+function normalizeIP(ip) {
+    if (ip === '::1' || ip === '::ffff:127.0.0.1') {
+        return '127.0.0.1';
+    }
+    // Handle IPv6-mapped IPv4 addresses
+    if (ip.startsWith('::ffff:')) {
+        return ip.substring(7);
+    }
+    return ip;
+}
+
 function sanitizeToken(token) {
     // remove any non-alphanumeric characters except dots and dashes (this really is good)
     return token.replace(/[^a-zA-Z0-9\.-]/g, '');
@@ -171,7 +183,7 @@ global.beastyStartTime = Date.now();        // shows server up time of beasty
 // 'l' is the socket connection for each client
 const server = net.createServer((l) => {
     l.on("data", (b) => {
-        const ip = l.remoteAddress;
+        const ip = normalizeIP(l.remoteAddress);
         const requestData = b.toString();
         const headers = requestData.split('\r\n');
         const origin = extractOrigin(headers);
