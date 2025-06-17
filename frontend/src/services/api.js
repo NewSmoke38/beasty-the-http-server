@@ -57,7 +57,7 @@ export const authAPI = {
   register: async (userData) => {
     console.log('authAPI.register called with:', userData);
     try {
-      const response = await api.post('/api/v1/users/register', userData);
+      const response = await api.post('/v1/users/register', userData);
       console.log('Registration successful:', response.data);
       return response.data;
     } catch (error) {
@@ -69,7 +69,7 @@ export const authAPI = {
   login: async (credentials) => {
     console.log('authAPI.login called with:', credentials);
     try {
-      const response = await api.post('/api/v1/users/login', credentials);
+      const response = await api.post('/v1/users/login', credentials);
       console.log('Login successful:', response.data);
       return response.data;
     } catch (error) {
