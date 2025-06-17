@@ -58,8 +58,19 @@ function corsHeaders(origin) {
     // If no origin provided, return empty array
     if (!origin) return [];
 
-    // Check if origin is in allowed list
-    const isAllowed = config.corsOrigins.includes(origin);
+    // Normalize the origin by trimming and converting to lowercase
+    const normalizedOrigin = origin.trim().toLowerCase();
+    
+    // Check if origin is in allowed list (case-insensitive)
+    const isAllowed = config.corsOrigins.some(allowed => 
+        allowed.trim().toLowerCase() === normalizedOrigin
+    );
+    
+    console.log('CORS Check:', {
+        requestOrigin: normalizedOrigin,
+        allowedOrigins: config.corsOrigins.map(o => o.toLowerCase()),
+        isAllowed
+    });
     
     // Return CORS headers with the actual request origin if allowed
     return [
