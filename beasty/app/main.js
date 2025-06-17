@@ -373,9 +373,9 @@ const server = net.createServer((l) => {
             
             // When rate limit is exceeded (5th request)
             if (userRequests.count > config.rateLimit.max) {
-                // Block the IP for 7 days (was 3 minutes)
+                // Block the IP for 3 minutes (was 7 days)
                 ipBlockList.set(ip, {
-                    blockedUntil: Date.now() + (7 * 24 * 60 * 60 * 1000), // 7 days
+                    blockedUntil: Date.now() + (3 * 60 * 1000), // 3 minutes
                     violations: (ipBlockList.get(ip)?.violations || 0) + 1
                 });
 
