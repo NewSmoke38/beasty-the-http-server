@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // URLs from environment variables
-const BEASTY_SERVER_URL = import.meta.env.VITE_BEASTY_SERVER_URL || 'https://beasty-server.onrender.com';
+const BEASTY_SERVER_URL = 'https://beasty-server.onrender.com';
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_BASE_URL || 'https://beasty-backend.onrender.com';
 
 console.log('Backend API URL:', BACKEND_URL);

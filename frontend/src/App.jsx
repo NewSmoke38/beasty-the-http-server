@@ -211,8 +211,8 @@ function App() {
       const endpoint = httpOption.split(' ')[1];
       console.log('Sending request to Beasty server:', endpoint);
       
-      // Make request to Beasty server
-      const response = await fetch(`http://localhost:8000${endpoint}`, {
+      // Make request to Beasty server using the correct URL
+      const response = await fetch(`https://beasty-server.onrender.com${endpoint}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${user.token}`,
@@ -248,9 +248,27 @@ function App() {
         setRemainingRequests(0);
         throw new Error(`[You have used all your beasty requests] status: ${response.status}`);
       }
-    } catch (error) {
-      console.error('Request error:', error);
-      setResponse({ error: error.message || 'Request failed' });
+
+      // If we get a 403 status, it means rate limit exceeded
+      if (!response.ok && response.status === 403) {
+        setRemainingRequests(0);
+        throw new Error(`[Rate limit exceeded] status: ${response.status}`);
+      }
+
+      // If we get a 401 status, it means unauthorized
+      if (!response.ok && response.status === 401) {
+        setResponse({ error: "Unauthorized. Please login again." });
+        return;
+      }
+
+      // If we get any other error status
+      if (!response.ok) {
+        throw new Error(`[Error] status: ${response.status}`);
+      }
+
+    } catch (err) {
+      console.error('Request error:', err);
+      setResponse({ error: err.message || 'An error occurred while making the request' });
     }
   };
 
@@ -278,83 +296,89 @@ function App() {
         return <Arch />;
       default:
         return (
-          <>
+          <div className="beasty-page">
             <div className="beasty-center-content">
               <div className="beasty-logo pixel-font">
-                beasty<span className="beasty-dot">.</span>
+                Beasty<span className="beasty-dot">.</span>
               </div>
-              <div className="beasty-desc">A HTTP server built from scratch.</div>
-              <div className="beasty-desc beasty-desc-secondary">No frameworks. No shortcuts. Just raw code.</div>
-              <div className="beasty-info-blue">4 requests only. No retries.</div>
-              <div className="beasty-desc" style={{ marginTop: '25px' }}>
-                Lore <span className="beasty-docs-ref">(AKA Docs)</span> explain how it works.
-              </div>
-              <div className="beasty-desc beasty-desc-secondary" style={{ fontSize: '0.9rem', marginTop: '5px' }}>
-                (recommended to read first, then try)
-              </div>
+              <div className="beasty-desc">A minimalist, ephemeral request tool.</div>
+              <div className="beasty-desc beasty-desc-secondary">Built from scratch. With intention.</div>
             </div>
-            {/* Custom HTTP dropdown field */}
-            <div className="custom-dropdown-container" ref={dropdownRef}>
-              <div 
-                className="custom-dropdown-header"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              >
-                <span>{httpOption}</span>
-                <span className={`custom-dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}>▼</span>
-              </div>
-              {isDropdownOpen && (
-                <div className="custom-dropdown-list">
-                  {HTTP_OPTIONS.map((option) => (
-                    <div
-                      key={option}
-                      className={`custom-dropdown-item ${option === httpOption ? 'selected' : ''}`}
-                      onClick={() => handleOptionSelect(option)}
-                    >
-                      {option}
-                    </div>
-                  ))}
+
+            {user ? (
+              <div className="beasty-info-merged-box terminal-box">
+                <div className="terminal-line">
+                  <span className="terminal-user">beasty@main</span>:<span className="terminal-path">~$</span>
+                  <span className="terminal-command">{displayedCommand}</span>
+                  <span className="terminal-cursor">{showCursor ? '█' : ''}</span>
                 </div>
-              )}
-            </div>
-            {/* Terminal-like merged info box */}
-            <div className="beasty-info-merged-box terminal-box">
-              <div className="terminal-line">
-                <span className="terminal-user">beasty@server</span>:<span className="terminal-path">~$</span>
-                <span className="terminal-command">
-                  {displayedCommand}
-                </span>
-                {showCursor && !isResponseTyping && <span className="terminal-cursor">&nbsp;</span>}
-              </div>
-              {response && (
                 <div className="terminal-response">
-                  <div className="response-header">Response:</div>
-                  <pre dangerouslySetInnerHTML={{ __html: displayedResponse }}>
-                  </pre>
-                  {showResponseCursor && <span className="terminal-cursor">&nbsp;</span>}
+                  {displayedResponse && (
+                    <pre dangerouslySetInnerHTML={{ __html: displayedResponse }} />
+                  )}
+                  {showResponseCursor && <span className="terminal-cursor">█</span>}
                 </div>
-              )}
-            </div>
-            {/* Footer navigation hints */}
-            <div className="beasty-footer-nav">
-              <button 
-                className={`beasty-send-btn ${requestCount >= 5 ? 'beasty-send-btn-disabled' : ''}`}
-                onClick={requestCount >= 5 ? undefined : handleSendRequest}
-                disabled={requestCount >= 5}
-                style={{ pointerEvents: requestCount >= 5 ? 'none' : 'auto' }}
-              >
-                <span className="beasty-footer-hint beasty-footer-orange">[Enter→</span>Send<span className="beasty-footer-hint">]</span>
-              </button>
-              <span className="beasty-footer-hint">[Open→</span>
-              <span 
-                className="beasty-doc-link" 
-                onClick={() => setCurrentPage('lore')}
-                style={{ cursor: 'pointer' }}
-              >
-                Documentation
-              </span>
-              <span className="beasty-footer-hint">]</span>
-            </div>
-          </>
+                <div className="beasty-controls">
+                  <div className="beasty-dropdown" ref={dropdownRef}>
+                    <button 
+                      className="beasty-button"
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    >
+                      {httpOption} {isDropdownOpen ? '▲' : '▼'}
+                    </button>
+                    {isDropdownOpen && (
+                      <div className="beasty-dropdown-content">
+                        {HTTP_OPTIONS.map((option) => (
+                          <div
+                            key={option}
+                            className="beasty-dropdown-item"
+                            onClick={() => handleOptionSelect(option)}
+                          >
+                            {option}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <button 
+                    className="beasty-button"
+                    onClick={handleSendRequest}
+                    disabled={!user || !user.token}
+                  >
+                    Send Request
+                  </button>
+                  <button 
+                    className="beasty-button beasty-button-logout"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="beasty-info-merged-box terminal-box">
+                <div className="terminal-line">
+                  <span className="terminal-user">beasty@main</span>:<span className="terminal-path">~$</span>
+                  <span className="terminal-command">Please login to continue</span>
+                  <span className="terminal-cursor">█</span>
+                </div>
+                <div className="beasty-controls">
+                  <button 
+                    className="beasty-button"
+                    onClick={() => setShowLogin(true)}
+                  >
+                    Login
+                  </button>
+                  <button 
+                    className="beasty-button"
+                    onClick={() => setShowRegister(true)}
+                  >
+                    Register
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         );
     }
   };

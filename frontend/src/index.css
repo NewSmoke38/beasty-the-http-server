@@ -66,3 +66,54 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Beasty Request Component Styles */
+.beasty-request-container {
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px;
+  color: white;
+}
+
+.beasty-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.beasty-button:hover {
+  background-color: #45a049;
+}
+
+.beasty-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.beasty-response {
+  background-color: #2a2a2a;
+  padding: 15px;
+  border-radius: 4px;
+  margin-top: 20px;
+}
+
+.beasty-response pre {
+  color: #4CAF50;
+  font-family: monospace;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.beasty-error {
+  color: #ff4444;
+  margin-top: 10px;
+  padding: 10px;
+  background-color: rgba(255, 68, 68, 0.1);
+  border-radius: 4px;
+}
