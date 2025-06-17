@@ -11,7 +11,6 @@ A custom HTTP server written from scratch using raw TCP sockets — with a heavy
 
 Strict? Yeah. But that’s the point.
 
-⸻
 
 # Why I made this?
 
@@ -19,7 +18,6 @@ I built beasty as a challenge through CodeCrafters, inspired by a desire to go l
 
 And it really seemed interesting, which it absolutely was!!!
 
-⸻
 
 # How It Works
 
@@ -36,7 +34,6 @@ Splits them into its HTTP method, path, headers, body, and version.
 
 3.	No user can hit custom URLs. Only these endpoints are allowed. That’s not a bug, that’s a feature. For atmost security.
 
-⸻
 
 # Real Struggles
 
@@ -49,7 +46,6 @@ Splits them into its HTTP method, path, headers, body, and version.
 
 - Socket end states were bad, they issued a lot of bugs.
 
-⸻
 
 # What Did I Learn?
 
