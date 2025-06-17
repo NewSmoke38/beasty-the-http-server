@@ -2,14 +2,14 @@ import axios from 'axios';
 
 // URLs from environment variables
 const BEASTY_SERVER_URL = import.meta.env.VITE_BEASTY_SERVER_URL || 'http://localhost:8000';
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_BASE_URL || 'https://beasty-backend.onrender.com/api';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_BASE_URL || 'https://beasty-backend.onrender.com';
 
 console.log('Backend API URL:', BACKEND_URL);
 console.log('Beasty Server URL:', BEASTY_SERVER_URL);
 
 // Axios instance for backend (Express/Mongo)
 const api = axios.create({
-  baseURL: BACKEND_URL,
+  baseURL: `${BACKEND_URL}/api`,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -25,7 +25,9 @@ const beastyApi = axios.create({
 
 // Interceptors for logging (optional, can be added to both if needed)
 api.interceptors.request.use(request => {
-  console.log('API Request:', {
+  console.log('API Request Details:', {
+    fullUrl: `${request.baseURL}${request.url}`,
+    baseURL: request.baseURL,
     url: request.url,
     method: request.method,
     data: request.data,
@@ -57,11 +59,18 @@ export const authAPI = {
   register: async (userData) => {
     console.log('authAPI.register called with:', userData);
     try {
+      console.log('Making registration request to:', `${api.defaults.baseURL}/v1/users/register`);
       const response = await api.post('/v1/users/register', userData);
       console.log('Registration successful:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Registration failed:', error);
+      console.error('Registration failed:', {
+        error: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        url: error.config?.url,
+        baseURL: error.config?.baseURL
+      });
       throw error.response?.data || error.message;
     }
   },
