@@ -1,5 +1,5 @@
 import net from 'net';
-import zlib from 'zlib';
+import zlib from 'zlib';   /// for compression
 import { config } from '../config.js';
 import jwt from 'jsonwebtoken';
 import { logRequest } from './logger.js';
@@ -53,14 +53,14 @@ function sanitizeQueryParams(queryString) {
         }
     }
     
-    return params.toString();
+        return params.toString();
 }
 
 // Function to extract origin from request headers
 function extractOrigin(headers) {
     // Find the origin header (case-insensitive)
     const originHeader = headers.find(h => h.toLowerCase().startsWith('origin:'));
-    if (!originHeader) {
+         if (!originHeader) {
         console.log('No origin header found');
         return null;
     }
@@ -69,8 +69,6 @@ function extractOrigin(headers) {
     const [key, ...rest] = originHeader.split(':');
     const originValue = rest.join(':').trim();
     
-    console.log('Extracted origin header:', originHeader);
-    console.log('Extracted origin value:', originValue);
     
     return originValue;
 }
@@ -89,7 +87,6 @@ function corsHeaders(origin) {
         ];
     }
 
-    console.log('Constructing CORS headers for origin:', origin);
     
     // Always return the actual origin in the header
     const headers = [
@@ -100,7 +97,6 @@ function corsHeaders(origin) {
         "Access-Control-Max-Age: 86400"
     ];
 
-    console.log('Generated CORS headers:', headers);
     return headers;
 }
 
@@ -312,8 +308,9 @@ const server = net.createServer((l) => {
                 return;
             }
             
-            lastRequestTime.set(ip, Date.now());
+        lastRequestTime.set(ip, Date.now());
         }
+
 
         const f = headers.slice(1);      // convert b data coming from users in packets to string
         // f is an array tho
@@ -340,7 +337,7 @@ const server = net.createServer((l) => {
         l.write = function(data) {
             // extract status code from response
             const statusLine = data.toString().split('\r\n')[0];
-            const statusCode = statusLine.split(' ')[1];
+        const statusCode = statusLine.split(' ')[1];
             
             // Log the request
             logRequest(ip, j, i, statusCode, userAgent);
@@ -363,7 +360,7 @@ const server = net.createServer((l) => {
                 // if yes, reset the count to 1 and update timestamp
                 userRequests.count = 1;
                 userRequests.timestamp = now;
-            } else {
+        } else {
                 // if no, increment the count, this happens always ig, like whose gonna wait to make req dude
                 userRequests.count++;
             }
@@ -400,7 +397,7 @@ const server = net.createServer((l) => {
                 });
                 return;
             }
-        }
+        } 
 
     // allowed stuff 
     // GET: for getting data
@@ -448,17 +445,13 @@ const server = net.createServer((l) => {
             // Handle root path "/"
             if (i === "/") {  
                 const authLine = f.find(line => line.toLowerCase().startsWith("authorization:"));
-                console.log('Auth line:', authLine);  // Debug log
                 let token = null;  // Declare token in outer scope
                 
                 if (authLine) {
                     const parts = authLine.split("Bearer ");
-                    console.log('Auth parts:', parts);  // Debug log
                     const rawToken = parts.length > 1 ? parts[1] : null;
-                    console.log('Raw token:', rawToken);  // Debug log
                     token = rawToken ? sanitizeToken(rawToken) : null;
-                    console.log('Sanitized token:', token);  // Debug log
-                } else {
+        } else {
                     console.log('No auth line found');  // Debug log
                 }
                 
@@ -467,7 +460,7 @@ const server = net.createServer((l) => {
                         error: "Authorization token missing" 
                     });
                     
-                    const response = [
+            const response = [
                         "HTTP/1.1 401 Unauthorized",
                         "Content-Type: application/json",
                         ...corsHeaders(origin),
@@ -550,6 +543,7 @@ const server = net.createServer((l) => {
                 return;
             }
 
+
     // actual endpoint hitting starts here, w a user asking for magic basically lol
              // Handle /beasty route
         if (i.startsWith("/beasty")) {
@@ -585,7 +579,7 @@ const server = net.createServer((l) => {
 
     // spicy stuff here, which i am proud of, cause this whole checking ideation was purely mine.
     // Make request to backend server, the client is beast(the-http-server) it self, lesssgoooo
-    fetch(`${config.backendUrl}/api/v1/beasty/check`, {
+fetch(`${config.backendUrl}/api/v1/beasty/check`, {
         method: "GET",
                     headers: { 
                         Authorization: `Bearer ${token}`,

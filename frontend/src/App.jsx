@@ -15,7 +15,6 @@ const HTTP_OPTIONS = [
   'GET /beasty?withIP=true'
 ];
 
-// Helper function to color JSON keys
 const colorizeJsonKeys = (jsonStr) => {
   return jsonStr.replace(/"([^"]+)":/g, '<span style="color: #f6c177">"$1"</span>:');
 };
@@ -39,9 +38,8 @@ function App() {
   const [displayedResponse, setDisplayedResponse] = useState('');
   const [isResponseTyping, setIsResponseTyping] = useState(false);
   const [showResponseCursor, setShowResponseCursor] = useState(false);
-  const [visitorCount, setVisitorCount] = useState(0);
+  const [visitorCount, setVisitorCount] = useState(0);   // for fun
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -52,7 +50,6 @@ function App() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Add cleanup interval with error handling
   useEffect(() => {
     const interval = setInterval(() => {
       try {
@@ -60,9 +57,9 @@ function App() {
       } catch (error) {
         console.error('Token cleanup error:', error);
       }
-    }, 10800000);
+        }, 10800000);
     return () => clearInterval(interval);
-  }, []);
+}, []);
 
   // Handle token operations with error handling
   const handleTokenOperation = (operation) => {
@@ -74,7 +71,7 @@ function App() {
     }
   };
 
-  // Typing animation effect for command
+  // Typing animation effect for command   // my idea 
   useEffect(() => {
     if (isTyping) {
       setShowCursor(false);
@@ -92,18 +89,17 @@ function App() {
         }
       }, 50);
 
-      return () => clearInterval(typingInterval);
+  return () => clearInterval(typingInterval);
     }
   }, [httpOption, isTyping]);
 
-  // Typing animation effect for response
+  // Typing animation effect for response same
   useEffect(() => {
     if (response) {
       setIsResponseTyping(true);
       setShowResponseCursor(false);
       setShowCursor(false);
       
-      // Convert response to string and colorize keys
       const responseStr = JSON.stringify(response, null, 2);
       let currentIndex = 0;
       
@@ -128,7 +124,7 @@ function App() {
     setHttpOption(option);
     setIsDropdownOpen(false);
     setIsTyping(true);
-    setShowResponseCursor(false); // Hide response cursor when new command starts
+    setShowResponseCursor(false); // Hide response cursor when new command starts.   // very imp
   };
 
   const handleLogin = async (e) => {
@@ -142,22 +138,19 @@ function App() {
         password: e.target.password.value
       });
 
-      if (response.success) {
+if (response.success) {
         const { accessToken } = response.data;
         
-        // Check if token is already expired
         if (handleTokenOperation(() => isTokenExpired(accessToken))) {
           setLoginError('Login failed: Token expired');
           return;
         }
 
-        // Store the user data and token
         setUser({
           ...response.data.user,
           token: accessToken
         });
         
-        // Set up token expiration check
         const expirationTime = handleTokenOperation(() => getTokenExpirationTime(accessToken));
         if (expirationTime) {
           const timeUntilExpiry = expirationTime - Date.now();
@@ -199,7 +192,6 @@ function App() {
         return;
       }
 
-      // Check if token is expired
       if (handleTokenOperation(() => isTokenExpired(user.token))) {
         setResponse({ error: "Session expired. Please login again." });
         return;
@@ -211,6 +203,9 @@ function App() {
       const endpoint = httpOption.split(' ')[1];
       console.log('Sending request to Beasty server:', endpoint);
       
+
+
+      // real game starte here in the merge box
       // Make request to Beasty server using the correct URL
       const response = await fetch(`https://beasty-server.onrender.com${endpoint}`, {
         method: 'GET',
@@ -243,25 +238,21 @@ function App() {
         setResponse(data);
       }
 
-      // If we get a 429 status, set remaining requests to 0
       if (!response.ok && response.status === 429) {
         setRemainingRequests(0);
         throw new Error(`[You have used all your beasty requests] status: ${response.status}`);
       }
 
-      // If we get a 403 status, it means rate limit exceeded
       if (!response.ok && response.status === 403) {
         setRemainingRequests(0);
         throw new Error(`[Rate limit exceeded] status: ${response.status}`);
       }
 
-      // If we get a 401 status, it means unauthorized
       if (!response.ok && response.status === 401) {
         setResponse({ error: "Unauthorized. Please login again." });
         return;
       }
 
-      // If we get any other error status
       if (!response.ok) {
         throw new Error(`[Error] status: ${response.status}`);
       }
@@ -272,17 +263,12 @@ function App() {
     }
   };
 
-  // Add effect to increment visitor count
-  useEffect(() => {
-    // Get the current count from localStorage or start at 0
+ useEffect(() => {
     const currentCount = parseInt(localStorage.getItem('visitorCount') || '0');
-    // Increment the count
     const newCount = currentCount + 1;
-    // Save to localStorage
     localStorage.setItem('visitorCount', newCount.toString());
-    // Update state
     setVisitorCount(newCount);
-  }, []); // Run only once when component mounts
+  }, []); 
 
   const renderPage = () => {
     switch (currentPage) {

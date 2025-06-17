@@ -1,13 +1,12 @@
 import axios from 'axios';
 
-// URLs from environment variables
 const BEASTY_SERVER_URL = 'https://beasty-server.onrender.com';
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_BASE_URL || 'https://beasty-backend.onrender.com';
 
 console.log('Backend API URL:', BACKEND_URL);
 console.log('Beasty Server URL:', BEASTY_SERVER_URL);
 
-// Axios instance for backend (Express/Mongo)
+// Axios instance for backend /Mongo)
 const api = axios.create({
   baseURL: `${BACKEND_URL}/api`,
   headers: {
@@ -23,7 +22,6 @@ const beastyApi = axios.create({
   },
 });
 
-// Interceptors for logging (optional, can be added to both if needed)
 api.interceptors.request.use(request => {
   console.log('API Request Details:', {
     fullUrl: `${request.baseURL}${request.url}`,
@@ -86,7 +84,6 @@ beastyApi.interceptors.response.use(
   }
 );
 
-// Auth API calls (for backend)
 export const authAPI = {
   register: async (userData) => {
     console.log('authAPI.register called with:', userData);
@@ -120,8 +117,6 @@ export const authAPI = {
   }
 };
 
-// Example usage for Beasty server:
-// const response = await beastyApi.get('/beasty');
 
 export { api, beastyApi };
 export default api; 

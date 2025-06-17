@@ -1,37 +1,31 @@
 export const config = {
-    // if PORT is set in .env, use that otherwise use 8000
     port: process.env.PORT || 8000,
 
-    // if BACKEND_URL is set in .env, use that otherwise use localhost:4000
     backendUrl: process.env.BACKEND_URL || 'https://beasty-backend.onrender.com',
 
-    // JWT secret for verifying admin tokens
     jwtSecret: process.env.JWT_SECRET || 'your-super-secret-jwt-key',
 
-    // if CORS_ORIGINS is set in .env, split it by commas into an array
-    // otherwise use development origins
     corsOrigins: process.env.CORS_ORIGINS?.split(',') || [
         'http://localhost:5174',
         'http://localhost:3000',
         'http://localhost:5173',
-        'https://beasty-frontend.vercel.app'  // Vercel production URL
+        'https://beasty-frontend.vercel.app'  // Vercel production URL (uwu)
     ],
 
     // Rate limiting settings from IP
     rateLimit: {
-        // 3 minutes in milliseconds (3 * 60 * 1000)
-        // This is how long we track requests from each IP
+        // This is how long we track requests from each IP (3 min)
         windowMs: 3 * 60 * 1000,
 
-        // Maximum number of requests allowed per IP in the time window
+        // maximum number of requests allowed per ip in the time window
         max: 4
     },
 
-    // How long to wait for a response before timing out (5 seconds)
+    // How long to wait for a response before timing out (5 secs)
     timeout: 5000,
 
 
-    // Gzip compression settings
+    // Gzip compression 
     compression: {
         // Whether to compress responses
         enabled: true,
@@ -44,20 +38,17 @@ export const config = {
     },
 
 
-    // IP Access Control
+    // IP Access control
     ipAccess: {
-        // list of trusted IPs that bypass rate limiting - vvip treatment
         whitelist: [],
         
-        // list of blocked IPs - bad ones 
         blacklist: [],
         
         enabled: true
     },
 
-    // Request throttling
+    // Request throttling (good)
     throttling: {
-        // min time (in milliseconds) between requests from the same IP
         minTimeBetweenRequests: 1000,  // 1 second
         
         enabled: true

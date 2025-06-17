@@ -11,7 +11,7 @@ const LoginModal = ({ onClose }) => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError(''); // clear error when user types this is good
+       setError('');    // clear error when user types this is good
   };
 
   const handleSubmit = async (e) => {
@@ -22,7 +22,7 @@ const LoginModal = ({ onClose }) => {
     try {
       const response = await authAPI.login(formData);
       console.log('Login successful:', response);
-      // store the token in localStorage for future use in beasty
+          // store the token in localStorage for future use in beasty (so that we can inject auth bearer token automatically in the get reqs for merge box)
       localStorage.setItem('token', response.token);
       onClose(); // closes form on success
     } catch (err) {

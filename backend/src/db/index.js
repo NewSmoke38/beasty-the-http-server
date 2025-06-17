@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-// try catch method is always best
+// try catch method is always best cause DB can be in another continent anyday
 const connectDB = async () => {
     try {
         const connectionInstance = await mongoose.connect
