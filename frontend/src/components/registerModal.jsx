@@ -6,12 +6,12 @@ const RegisterModal = ({ onClose }) => {
     fullName: '',
     username: '',
     email: '',
-    password: '',
+  password: '',
     confirmPassword: ''
   });
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState({
+   const [loading, setLoading] = useState(false);
+    const [passwordStrength, setPasswordStrength] = useState({
     score: 0,
     message: '',
     color: '#ff4b6e'
@@ -22,10 +22,10 @@ const RegisterModal = ({ onClose }) => {
     let message = '';
     let color = '#ff4b6e'; // Default red
 
-    if (password.length >= 8) score += 1;
+  if (password.length >= 8) score += 1;
     if (/[A-Z]/.test(password)) score += 1;
-    if (/[0-9]/.test(password)) score += 1;
-    if (/[!@#$%^&*]/.test(password)) score += 1;
+     if (/[0-9]/.test(password)) score += 1;
+      if (/[!@#$%^&*]/.test(password)) score += 1;
     if (password.length >= 12) score += 1;
 
     switch (score) {

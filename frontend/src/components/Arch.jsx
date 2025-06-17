@@ -8,14 +8,14 @@ function Arch() {
           Arch<span className="beasty-dot">.</span>
         </div>
         <div className="beasty-desc">Security and Architecture.</div>
-        <div className="beasty-desc beasty-desc-secondary">Understanding Beasty's security flows.</div>
+<div className="beasty-desc beasty-desc-secondary">Understanding Beasty's security flows.</div>
       </div>
 
       <div className="beasty-info-merged-box terminal-box">
         <div className="terminal-line">
           <span className="terminal-user">beasty@arch</span>:<span className="terminal-path">~$</span>
           <span className="terminal-command">cat security.md</span>
-          <span className="terminal-cursor">&nbsp;</span>
+    <span className="terminal-cursor">&nbsp;</span>
         </div>
         <div className="terminal-response">
           <pre>
