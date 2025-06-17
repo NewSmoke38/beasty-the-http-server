@@ -46,18 +46,28 @@ function sanitizeQueryParams(queryString) {
 
 // Function to extract origin from request headers
 function extractOrigin(headers) {
-    const origin = headers.find(h => h.toLowerCase().startsWith('origin:'));
-    if (!origin) return null;
-    const originValue = origin.split(':')[1].trim();
-    console.log('Extracted origin value:', originValue);  // Debug log
+    // Find the origin header (case-insensitive)
+    const originHeader = headers.find(h => h.toLowerCase().startsWith('origin:'));
+    if (!originHeader) {
+        console.log('No origin header found');
+        return null;
+    }
+
+    // Split only on the first colon to preserve the rest of the URL
+    const [key, ...rest] = originHeader.split(':');
+    const originValue = rest.join(':').trim();
+    
+    console.log('Extracted origin header:', originHeader);
+    console.log('Extracted origin value:', originValue);
+    
     return originValue;
 }
 
 // CORS headers function
 function corsHeaders(origin) {
-    // If no origin provided, return empty array
+    // If no origin provided, return default headers
     if (!origin) {
-        console.log('No origin provided');
+        console.log('No origin provided, using default CORS headers');
         return [
             "Access-Control-Allow-Origin: *",
             "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH",
@@ -67,28 +77,19 @@ function corsHeaders(origin) {
         ];
     }
 
-    // Normalize the origin by trimming and converting to lowercase
-    const normalizedOrigin = origin.trim().toLowerCase();
-    
-    // Check if origin is in allowed list (case-insensitive)
-    const isAllowed = config.corsOrigins.some(allowed => 
-        allowed.trim().toLowerCase() === normalizedOrigin
-    );
-    
-    console.log('CORS Check:', {
-        requestOrigin: normalizedOrigin,
-        allowedOrigins: config.corsOrigins.map(o => o.toLowerCase()),
-        isAllowed
-    });
+    console.log('Constructing CORS headers for origin:', origin);
     
     // Always return the actual origin in the header
-    return [
+    const headers = [
         `Access-Control-Allow-Origin: ${origin}`,
         "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH",
         "Access-Control-Allow-Headers: Content-Type, Authorization, Accept, X-Requested-With, Origin, X-CSRF-Token",
         "Access-Control-Allow-Credentials: true",
         "Access-Control-Max-Age: 86400"
     ];
+
+    console.log('Generated CORS headers:', headers);
+    return headers;
 }
 
 //  protection against common web vulnerabilities
@@ -175,22 +176,32 @@ const server = net.createServer((l) => {
         const headers = requestData.split('\r\n');
         const origin = extractOrigin(headers);
         
+        console.log('Received request:', {
+            ip,
+            headers: headers.slice(0, 5), // Log first 5 headers
+            origin
+        });
+
         // Handle preflight requests
         if (requestData.startsWith('OPTIONS')) {
             console.log('Handling preflight request from origin:', origin);
             
             // Always respond to preflight with 204 and CORS headers
+            const corsHeadersList = corsHeaders(origin);
+            console.log('Sending preflight response headers:', corsHeadersList);
+            
             const response = [
                 "HTTP/1.1 204 No Content",
                 "Content-Type: text/plain",
-                ...corsHeaders(origin),
+                ...corsHeadersList,
                 "",
                 ""
             ].join("\r\n");
             
-            console.log('Preflight response:', response);
+            console.log('Full preflight response:', response);
             
             l.write(response, () => {
+                console.log('Preflight response sent');
                 l.destroy();
             });
             return;
