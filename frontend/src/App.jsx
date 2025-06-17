@@ -78,7 +78,7 @@ function App() {
   useEffect(() => {
     if (isTyping) {
       setShowCursor(false);
-      const command = `curl -i http://localhost:8000${httpOption.split(' ')[1]}`;
+      const command = `curl -i https://beasty-server.onrender.com${httpOption.split(' ')[1]}`;
       let currentIndex = 0;
       
       const typingInterval = setInterval(() => {
