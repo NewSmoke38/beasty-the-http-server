@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // URLs from environment variables
-const BEASTY_SERVER_URL = import.meta.env.VITE_BEASTY_SERVER_URL || 'http://localhost:8000';
+const BEASTY_SERVER_URL = import.meta.env.VITE_BEASTY_SERVER_URL || 'https://beasty-server.onrender.com';
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_BASE_URL || 'https://beasty-backend.onrender.com';
 
 console.log('Backend API URL:', BACKEND_URL);
@@ -49,6 +49,38 @@ api.interceptors.response.use(
       message: error.message,
       response: error.response?.data,
       status: error.response?.status
+    });
+    return Promise.reject(error);
+  }
+);
+
+// Add interceptors for Beasty API
+beastyApi.interceptors.request.use(request => {
+  console.log('Beasty Request Details:', {
+    fullUrl: `${request.baseURL}${request.url}`,
+    baseURL: request.baseURL,
+    url: request.url,
+    method: request.method,
+    headers: request.headers
+  });
+  return request;
+});
+
+beastyApi.interceptors.response.use(
+  response => {
+    console.log('Beasty Response:', {
+      status: response.status,
+      data: response.data
+    });
+    return response;
+  },
+  error => {
+    console.error('Beasty Error:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      url: error.config?.url,
+      baseURL: error.config?.baseURL
     });
     return Promise.reject(error);
   }
