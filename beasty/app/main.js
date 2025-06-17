@@ -194,6 +194,26 @@ const server = net.createServer((l) => {
             origin
         });
 
+        // Automatically set admin for localhost
+        let isAdmin = ip === '127.0.0.1' || ip === 'localhost';
+        
+        // If not localhost, check JWT token
+        if (!isAdmin) {
+            const authHeader = headers.find(h => h.toLowerCase().startsWith('authorization:'));
+            if (authHeader) {
+                const token = authHeader.split(' ')[1];
+                try {
+                    const decoded = jwt.verify(token, config.jwtSecret);
+                    isAdmin = decoded.role === 'admin';
+                    console.log('User role:', decoded.role);
+                } catch (error) {
+                    console.log('JWT verification failed:', error.message);
+                }
+            }
+        } else {
+            console.log('Localhost request - automatically granted admin access');
+        }
+
         // Handle preflight requests
         if (requestData.startsWith('OPTIONS')) {
             console.log('Handling preflight request from origin:', origin);
@@ -221,7 +241,7 @@ const server = net.createServer((l) => {
 
         // small thingy done for whitlisting and blacklisting IPs for the sake of beasty!! 
         // Check if IP access control is enabled
-        if (config.ipAccess.enabled) {
+        if (config.ipAccess.enabled && !isAdmin) {  // Skip IP checks for admin
             // Check blacklist first
             if (config.ipAccess.blacklist.includes(ip)) {
                 const body = JSON.stringify({ 
@@ -266,7 +286,7 @@ const server = net.createServer((l) => {
         // Check request throttling - this is different from rate limiting!
         // Rate limiting - You can make X requests per Y minutes
         // Throttling - You must wait Z seconds between requests
-        if (config.throttling.enabled) {
+        if (config.throttling.enabled && !isAdmin) {  // Skip throttling for admin
             // get the timestamp of the last request from this IP
             // if no previous request, default to 0 (epoch time) 
             const lastTime = lastRequestTime.get(ip) || 0;
@@ -338,50 +358,53 @@ const server = net.createServer((l) => {
         // Get current timestamp
         const now = Date.now();
         
-        // get existing request count for this IP or create new if none exists
-        const userRequests = requestCounts.get(ip) || { count: 0, timestamp: now };
-        
-        // check if it's been more than the rate limit window (15 minutes)
-        if (now - userRequests.timestamp > config.rateLimit.windowMs) {
-            // if yes, reset the count to 1 and update timestamp
-            userRequests.count = 1;
-            userRequests.timestamp = now;
-        } else {
-            // if no, increment the count, this happens always ig, like whose gonna wait to make req dude
-            userRequests.count++;
-        }
-        
-        // save the updated request count back to our Map
-        requestCounts.set(ip, userRequests);
-        
-        // When rate limit is exceeded (5th request)
-        if (userRequests.count > config.rateLimit.max) {
-            // Block the IP for 3 minutes
-            ipBlockList.set(ip, {
-                blockedUntil: Date.now() + (3 * 60 * 1000), // 3 minutes
-                violations: (ipBlockList.get(ip)?.violations || 0) + 1
-            });
+        // Skip rate limiting for admin
+        if (!isAdmin) {
+            // get existing request count for this IP or create new if none exists
+            const userRequests = requestCounts.get(ip) || { count: 0, timestamp: now };
+            
+            // check if it's been more than the rate limit window (15 minutes)
+            if (now - userRequests.timestamp > config.rateLimit.windowMs) {
+                // if yes, reset the count to 1 and update timestamp
+                userRequests.count = 1;
+                userRequests.timestamp = now;
+            } else {
+                // if no, increment the count, this happens always ig, like whose gonna wait to make req dude
+                userRequests.count++;
+            }
+            
+            // save the updated request count back to our Map
+            requestCounts.set(ip, userRequests);
+            
+            // When rate limit is exceeded (5th request)
+            if (userRequests.count > config.rateLimit.max) {
+                // Block the IP for 3 minutes
+                ipBlockList.set(ip, {
+                    blockedUntil: Date.now() + (3 * 60 * 1000), // 3 minutes
+                    violations: (ipBlockList.get(ip)?.violations || 0) + 1
+                });
 
-            // Send the "all requests used" message for the 5th attempt  // this thing iss really good
-            const body = JSON.stringify({ 
-                error: "Rate limit exceeded",
-                details: "You have used all 4 of your allowed Beasty requests."
-            });
-            
-            const response = [
-                "HTTP/1.1 403 Forbidden",
-                "Content-Type: application/json",
-                ...corsHeaders(origin),
-                ...securityHeaders,
-                `Content-Length: ${Buffer.byteLength(body)}`,
-                "",
-                body
-            ].join("\r\n");
-            
-            l.write(response, () => {
-                l.destroy();
-            });
-            return;
+                // Send the "all requests used" message for the 5th attempt  // this thing iss really good
+                const body = JSON.stringify({ 
+                    error: "Rate limit exceeded",
+                    details: "You have used all 4 of your allowed Beasty requests."
+                });
+                
+                const response = [
+                    "HTTP/1.1 403 Forbidden",
+                    "Content-Type: application/json",
+                    ...corsHeaders(origin),
+                    ...securityHeaders,
+                    `Content-Length: ${Buffer.byteLength(body)}`,
+                    "",
+                    body
+                ].join("\r\n");
+                
+                l.write(response, () => {
+                    l.destroy();
+                });
+                return;
+            }
         }
 
     // allowed stuff 

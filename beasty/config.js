@@ -5,6 +5,9 @@ export const config = {
     // if BACKEND_URL is set in .env, use that otherwise use localhost:4000
     backendUrl: process.env.BACKEND_URL || 'https://beasty-backend.onrender.com',
 
+    // JWT secret for verifying admin tokens
+    jwtSecret: process.env.JWT_SECRET || 'your-super-secret-jwt-key',
+
     // if CORS_ORIGINS is set in .env, split it by commas into an array
     // otherwise use development origins
     corsOrigins: process.env.CORS_ORIGINS?.split(',') || [
