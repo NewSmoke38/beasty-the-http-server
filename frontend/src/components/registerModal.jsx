@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { authAPI } from '../services/api';
 
 const RegisterModal = ({ onClose }) => {
@@ -6,26 +6,28 @@ const RegisterModal = ({ onClose }) => {
     fullName: '',
     username: '',
     email: '',
-  password: '',
+    password: '',
     confirmPassword: ''
   });
   const [error, setError] = useState('');
-   const [loading, setLoading] = useState(false);
-    const [passwordStrength, setPasswordStrength] = useState({
+  const [loading, setLoading] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState({
     score: 0,
     message: '',
     color: '#ff4b6e'
   });
+  const [buttonText, setButtonText] = useState('Register');
+  const timerRefs = useRef([]);
 
   const calculatePasswordStrength = (password) => {
     let score = 0;
     let message = '';
     let color = '#ff4b6e'; // Default red
 
-  if (password.length >= 8) score += 1;
+    if (password.length >= 8) score += 1;
     if (/[A-Z]/.test(password)) score += 1;
-     if (/[0-9]/.test(password)) score += 1;
-      if (/[!@#$%^&*]/.test(password)) score += 1;
+    if (/[0-9]/.test(password)) score += 1;
+    if (/[!@#$%^&*]/.test(password)) score += 1;
     if (password.length >= 12) score += 1;
 
     switch (score) {
@@ -135,6 +137,26 @@ const RegisterModal = ({ onClose }) => {
     }
   };
 
+  useEffect(() => {
+    if (loading) {
+      setButtonText('Registering...');
+      timerRefs.current = [
+        setTimeout(() => setButtonText('Weaving magic...'), 2000),
+        setTimeout(() => setButtonText('Tucking you in...'), 4000),
+        setTimeout(() => setButtonText('Sprinkling stardust...'), 6000),
+        setTimeout(() => setButtonText('Almost ready...'), 8000),
+      ];
+    } else {
+      setButtonText('Register');
+      timerRefs.current.forEach(clearTimeout);
+      timerRefs.current = [];
+    }
+    return () => {
+      timerRefs.current.forEach(clearTimeout);
+      timerRefs.current = [];
+    };
+  }, [loading]);
+
   return (
     <div className="beasty-modal">
       <div className="beasty-modal-content">
@@ -225,7 +247,7 @@ const RegisterModal = ({ onClose }) => {
             type="submit"
             disabled={loading || passwordStrength.score < 3}
           >
-            {loading ? 'Registering...' : 'Register'}
+            {buttonText}
           </button>
         </form>
       </div>
