@@ -420,10 +420,10 @@ if (response.success) {
             {/* Footer navigation hints */}
             <div className="beasty-footer-nav">
               <button 
-                className={`beasty-send-btn ${requestCount >= 5 ? 'beasty-send-btn-disabled' : ''}`}
-                onClick={requestCount >= 5 ? undefined : handleSendRequest}
-                disabled={requestCount >= 5}
-                style={{ pointerEvents: requestCount >= 5 ? 'none' : 'auto' }}
+                className={`beasty-send-btn ${!user || requestCount >= 5 ? 'beasty-send-btn-disabled' : ''}`}
+                onClick={!user || requestCount >= 5 ? undefined : handleSendRequest}
+                disabled={!user || requestCount >= 5}
+                style={{ pointerEvents: !user || requestCount >= 5 ? 'none' : 'auto' }}
               >
                 <span className="beasty-footer-hint beasty-footer-orange">[Enter→</span>Send<span className="beasty-footer-hint">]</span>
               </button>
@@ -478,7 +478,7 @@ if (response.success) {
         <span className="beasty-auth-btns">
           {!user ? (
             <>
-              <button className="beasty-btn" onClick={() => setShowRegister(true)}>Register</button>
+              <button className="beasty-btn beasty-register-btn" onClick={() => setShowRegister(true)}>Register</button>
               <button className="beasty-btn" onClick={() => setShowLogin(true)}>Login</button>
             </>
           ) : (

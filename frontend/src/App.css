@@ -699,9 +699,19 @@ body, html, #root, .beasty-bg {
 }
 
 .beasty-send-btn-disabled {
-  opacity: 0.5;
+  opacity: 0.3;
   cursor: not-allowed;
   pointer-events: none;
+}
+
+@keyframes registerBlink {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+.beasty-register-btn {
+  animation: registerBlink 2s infinite;
 }
 
 .beasty-dot {

@@ -122,7 +122,7 @@ const requestCounts = new Map();
 const ipBlockList = new Map();  // Add this line for IP blocking
 const lastRequestTime = new Map();  // add this for request throttling (that a user can make x reqs with a time btw every req which we.ve set to 1 sec, diff from rate limiting tho)
 
-// Set up a cleanup interval that runs every 60 seconds (60000 milliseconds)
+// Set up a cleanup interval that runs every 3 hours (3 * 60 * 60 * 1000 milliseconds)
 const cleanupInterval = setInterval(() => {
     // Get current timestamp in milliseconds
     const now = Date.now();
@@ -157,7 +157,7 @@ const cleanupInterval = setInterval(() => {
         ipBlockList: ipBlockList.size,
         lastRequestTime: lastRequestTime.size
     });
-}, 60000); // Run this cleanup every 60 seconds
+}, 3 * 60 * 60 * 1000); // Run this cleanup every 3 hours
 
 // Cleanup on server shutdown
 // SIGTERM is a signal sent to a process to request its termination
@@ -386,13 +386,13 @@ const server = net.createServer((l) => {
             
             // When rate limit is exceeded (5th request)
             if (userRequests.count > config.rateLimit.max) {
-                // Block the IP for 3 minutes (for testing)
+                // Block the IP for 7 days
                 ipBlockList.set(ip, {
-                    blockedUntil: Date.now() + (3 * 60 * 1000), // 3 minutes
+                    blockedUntil: Date.now() + (7 * 24 * 60 * 60 * 1000), // 7 days
                     violations: (ipBlockList.get(ip)?.violations || 0) + 1
                 });
 
-                // Send the "all requests used" message for the 5th attempt  // this thing iss really good
+                // Send the "all requests used" message for the 5th attempt
                 const body = JSON.stringify({ 
                     error: "Rate limit exceeded",
                     details: "You have used all 4 of your allowed Beasty requests."
