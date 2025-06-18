@@ -559,6 +559,62 @@ const server = net.createServer((l) => {
                 return;
             }
 
+        // Handle /api/v1/beasty/ping endpoint (for cold start, no request count)
+        if (i === "/api/v1/beasty/ping") {
+          // extracts authorization header from the incoming request lines
+          const authLine = f.find(line => line.toLowerCase().startsWith("authorization:"));
+          const rawToken = authLine ? authLine.split("Bearer ")[1] : null;
+          const token = rawToken ? sanitizeToken(rawToken) : null;
+
+          if (!token) {
+            const body = JSON.stringify({ 
+              error: "Authorization token missing" 
+            });
+            const response = [
+              "HTTP/1.1 401 Unauthorized",
+              "Content-Type: application/json",
+              ...corsHeaders(origin),
+              ...securityHeaders,
+              `Content-Length: ${Buffer.byteLength(body)}`,
+              "",
+              body
+            ].join("\r\n");
+            l.write(response);
+            l.end();
+            return;
+          }
+
+          // Just verify the token, don't increment any counters
+          try {
+            jwt.verify(token, config.jwtSecret);
+            const body = JSON.stringify({ message: "pong" });
+            const response = [
+              "HTTP/1.1 200 OK",
+              "Content-Type: application/json",
+              ...corsHeaders(origin),
+              ...securityHeaders,
+              `Content-Length: ${Buffer.byteLength(body)}`,
+              "",
+              body
+            ].join("\r\n");
+            l.write(response);
+            l.end();
+          } catch (err) {
+            const body = JSON.stringify({ error: "Invalid token" });
+            const response = [
+              "HTTP/1.1 401 Unauthorized",
+              "Content-Type: application/json",
+              ...corsHeaders(origin),
+              ...securityHeaders,
+              `Content-Length: ${Buffer.byteLength(body)}`,
+              "",
+              body
+            ].join("\r\n");
+            l.write(response);
+            l.end();
+          }
+          return;
+        }
 
     // actual endpoint hitting starts here, w a user asking for magic basically lol
              // Handle /beasty route

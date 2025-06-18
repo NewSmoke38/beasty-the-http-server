@@ -117,6 +117,19 @@ export const authAPI = {
   }
 };
 
+beastyApi.ping = async (token) => {
+  try {
+    const response = await beastyApi.get('/api/v1/beasty/ping', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Beasty ping failed:', error);
+    throw error.response?.data || error.message;
+  }
+};
 
 export { api, beastyApi };
 export default api; 

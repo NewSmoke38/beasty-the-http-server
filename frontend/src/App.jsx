@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
 import RegisterModal from './components/registerModal';
-import { authAPI } from './services/api';
+import { authAPI, beastyApi } from './services/api';
 import DNA from './components/DNA';
 import Logs from './components/Logs';
 import Lore from './components/Lore';
@@ -174,12 +174,29 @@ if (response.success) {
         let readyMsgTimeouts = [];
         readyMsgTimeouts.push(setTimeout(() => {
           setDisplayedCommand('Getting things ready...');
-          readyMsgTimeouts.push(setTimeout(() => {
-            setDisplayedCommand('Ready! Beasty is awake. Choose a request to begin!');
-          }, 2000));
         }, 2000));
-        // Clear these timeouts if user logs out or selects a request
-        // (see handleOptionSelect below)
+        // Start pinging Beasty in parallel
+        let pingReturned = false;
+        let readyShown = false;
+        const showReady = () => {
+          if (!readyShown) {
+            setDisplayedCommand('Ready! Beasty is awake. Choose a request to begin!');
+            readyShown = true;
+          }
+        };
+        beastyApi.ping(accessToken).then(() => {
+          pingReturned = true;
+          // If at least 4 seconds have passed, show ready
+          if (readyMsgTimeouts.length === 2) showReady();
+        }).catch(() => {
+          // Even if ping fails, show ready after 4s
+          if (readyMsgTimeouts.length === 2) showReady();
+        });
+        // After 4 seconds, show ready if ping has returned
+        readyMsgTimeouts.push(setTimeout(() => {
+          if (pingReturned) showReady();
+          // else, wait for ping to return
+        }, 4000));
         window.__beastyReadyMsgTimeouts = readyMsgTimeouts;
       } else {
         setLoginError(response.message || 'Login failed. Please try again.');
