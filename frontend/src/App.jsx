@@ -170,12 +170,17 @@ if (response.success) {
 
         setShowLogin(false);
         // Show a sequence of server ready messages in the req url area (displayedCommand)
-        setDisplayedCommand('Waking up Beasty server...');
+        const serverWakeMessages = [
+          'Waking up Beasty server...',
+          'Brewing some code magic...',
+          'Stretching digital muscles...',
+          'Checking the pipes...',
+          'Feeding the hamsters...',
+          'Spinning up the gears...',
+          'Almost there, dusting off bits...',
+          'Final system checks...'
+        ];
         let readyMsgTimeouts = [];
-        readyMsgTimeouts.push(setTimeout(() => {
-          setDisplayedCommand('Getting things ready...');
-        }, 2000));
-        // Start pinging Beasty in parallel
         let pingReturned = false;
         let readyShown = false;
         const showReady = () => {
@@ -184,19 +189,29 @@ if (response.success) {
             readyShown = true;
           }
         };
+        // Show each message for 3s
+        serverWakeMessages.forEach((msg, idx) => {
+          readyMsgTimeouts.push(setTimeout(() => {
+            setDisplayedCommand(msg);
+            // If this is the last message and ping has returned, show ready
+            if (idx === serverWakeMessages.length - 1 && pingReturned) {
+              showReady();
+            }
+          }, idx * 3000));
+        });
+        // Start pinging Beasty in parallel
         beastyApi.ping(accessToken).then(() => {
           pingReturned = true;
-          // If at least 4 seconds have passed, show ready
-          if (readyMsgTimeouts.length === 2) showReady();
+          // If all messages have been shown, show ready
+          if (window.__beastyReadyMsgTimeouts && window.__beastyReadyMsgTimeouts.length === serverWakeMessages.length) {
+            showReady();
+          }
         }).catch(() => {
-          // Even if ping fails, show ready after 4s
-          if (readyMsgTimeouts.length === 2) showReady();
+          // Even if ping fails, show ready after all messages
+          if (window.__beastyReadyMsgTimeouts && window.__beastyReadyMsgTimeouts.length === serverWakeMessages.length) {
+            showReady();
+          }
         });
-        // After 4 seconds, show ready if ping has returned
-        readyMsgTimeouts.push(setTimeout(() => {
-          if (pingReturned) showReady();
-          // else, wait for ping to return
-        }, 4000));
         window.__beastyReadyMsgTimeouts = readyMsgTimeouts;
       } else {
         setLoginError(response.message || 'Login failed. Please try again.');
