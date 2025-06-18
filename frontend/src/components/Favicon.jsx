@@ -23,7 +23,7 @@ function Favicon() {
     // Draw dot
     ctx.fillStyle = '#b7c9ce';
     ctx.beginPath();
-    ctx.arc(size * 0.75, size * 0.22, size * 0.0625 * 4, 0, Math.PI * 2); // 8px at 128
+    ctx.arc(size * 0.75, size * 0.22, size * 0.0625 * 2, 0, Math.PI * 2); // 4px at 128 (smaller dot)
     ctx.fill();
 
     // Create a 32x32 canvas for the favicon
