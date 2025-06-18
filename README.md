@@ -34,6 +34,13 @@ Splits them into its HTTP method, path, headers, body, and version.
 
 3.	No user can hit custom URLs. Only these endpoints are allowed. That’s not a bug, that’s a feature. For atmost security.
 
+# Unique Features:
+
+1. Only 3 allowed endpoints (intentionally limited for security)
+2. Real-time server uptime tracking
+3. Cold start detection with ping endpoint
+4. Automatic token expiration handling
+5. Memory cleanup every 3 hours
 
 # Real Struggles
 
@@ -46,6 +53,13 @@ Splits them into its HTTP method, path, headers, body, and version.
 
 - Socket end states were bad, they issued a lot of bugs.
 
+# Technical Achievements:
+
+1. Zero external HTTP dependencies
+2. Real-time metadata tracking
+3. Gzip compression with configurable levels
+4. Custom error handling with detailed messages
+5. Privacy-first logging (no IP storage)
 
 # What Did I Learn?
 
