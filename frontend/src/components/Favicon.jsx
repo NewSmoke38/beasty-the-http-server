@@ -23,7 +23,7 @@ function Favicon() {
     // Draw dot (attached to 'b', bigger and closer)
     ctx.fillStyle = '#ff4b6e'; // Red dot
     ctx.beginPath();
-    ctx.arc(size * 0.72, size * 0.36, size * 0.0625 * 3, 0, Math.PI * 2); // 6px at 128, attached to 'b'
+    ctx.arc(size * 0.72, size * 0.36, size * 0.0625 * 2, 0, Math.PI * 2); // 4px at 128, attached to 'b'
     ctx.fill();
 
     // Create a 32x32 canvas for the favicon
