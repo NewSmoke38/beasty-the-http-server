@@ -52,15 +52,15 @@ Splits them into its HTTP method, path, headers, body, and version.
 I learned a lot building this project — the logic was determined by me alone (i am proud of it). Maybe nobody has made this exact kind of thing (or maybe I just haven’t seen it), but yeah, all the customization, the flow of requests + responses — I figured out myself, and it was solid learning.
 
 Here’s what I picked up:
-	1.	Rate-limiting
-	2.	IP-level rate-limiting
-	3.	TCP-level rate-limiting
-	4.	Input sanitization
-	5.	Gzip compression
-	6.	Handling timeouts
-	7.	Connecting two backends with one frontend
-	8.	API integration at its peak
-	9.	CORS & CSP are bad
+1.	Rate-limiting
+2.	IP-level rate-limiting
+3.	TCP-level rate-limiting
+4.	Input sanitization
+5.	Gzip compression
+6.	Handling timeouts
+7.	Connecting two backends with one frontend
+8.	API integration at its peak
+9.	CORS & CSP are bad
 
 Read the full [Documentation](https://cypress-cayenne-00d.notion.site/Making-of-beasty-2145118366ab809d91c1d42dd96cc57a)
 

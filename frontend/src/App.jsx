@@ -327,6 +327,13 @@ if (response.success) {
   };
 
  useEffect(() => {
+    // Rehydrate user from localStorage on app load
+    const token = localStorage.getItem('token');
+    if (token && !isTokenExpired(token)) {
+      setUser({ token });
+    } else {
+      setUser(null);
+    }
     const currentCount = parseInt(localStorage.getItem('visitorCount') || '0');
     const newCount = currentCount + 1;
     localStorage.setItem('visitorCount', newCount.toString());
