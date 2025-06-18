@@ -203,12 +203,12 @@ if (response.success) {
             }
           }, 40);
         };
-        // Sequentially animate each message for 4s
+        // Sequentially animate each message for 2.5s (20s total for 8 messages)
         const animateMessages = async () => {
           for (let idx = 0; idx < serverWakeMessages.length; idx++) {
             await new Promise((resolve) => {
               animateDisplayedCommand(serverWakeMessages[idx]);
-              setTimeout(resolve, 4000);
+              setTimeout(resolve, 2500);
             });
           }
           // After all messages, always show ready
