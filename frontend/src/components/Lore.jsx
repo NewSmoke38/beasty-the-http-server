@@ -38,16 +38,23 @@ Built from scratch. With intention.
 ========
 
 beasty is a minimalist, ephemeral request tool.
-It allows users to login, interact with 3 live endpoints, and retrieve real metadata about their requests — all with a strict 4-request limit per week per user
+It allows users to login, interact with 3 live endpoints, and retrieve real metadata about their requests — all with a strict 4-request limit per week per user`}
 
 
-# User Guide
+          </pre>
+          <div id="user-guide" style={{ marginTop: '2rem' }}>
+            <pre>
+{`# User Guide
 ===========
 
-ALL requests are GET/ requests as for now - 
-1.The user registers or logs into Beasty.
-2.Upon successful login, a session is created and tracked.
-3.The frontend (Beasty UI) unlocks access to 3 GET endpoints powered by the Backend server.
+1. Register and login to Beasty
+2. Wait for the "Ready! Beasty is awake" message, cause the server cold starts!
+3. Once ready, you can make requests to:
+   • /greet - Simple hello
+   • /beasty - Your request metadata
+   • /beasty?withIP - Metadata with your IP
+
+Note: Don't make requests until you see "Ready! Beasty is awake"!
 
 
 # Available endpoints
@@ -120,7 +127,8 @@ ALL requests are GET/ requests as for now -
 
 
 more coming soon!!!!!`}
-          </pre>
+            </pre>
+          </div>
         </div>
       </div>
     </div>

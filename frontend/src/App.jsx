@@ -361,7 +361,16 @@ if (response.success) {
               <div className="beasty-desc beasty-desc-secondary">No frameworks. No shortcuts. Just raw code.</div>
               <div className="beasty-info-blue">4 requests only. No retries.</div>
               <div className="beasty-desc" style={{ marginTop: '25px' }}>
-                Lore explain how it works.
+                Lore <a href="#user-guide" onClick={(e) => {
+                  e.preventDefault();
+                  setCurrentPage('lore');
+                  setTimeout(() => {
+                    const element = document.getElementById('user-guide');
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }, 100);
+                }} style={{ color: '#7ed6df', textDecoration: 'underline', cursor: 'pointer', fontWeight: 'bold' }}>(User Guide)</a> explain how it works.
               </div>
               <div className="beasty-desc beasty-desc-secondary" style={{ fontSize: '0.9rem', marginTop: '5px' }}>
                 (recommended to read first, then try)
