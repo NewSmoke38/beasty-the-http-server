@@ -350,7 +350,7 @@ if (response.success) {
               </button>
               <span className="beasty-footer-hint">[Open→</span>
               <span className="beasty-doc-link">
-                <a href="https://www.notion.so/your-notion-blog-link" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>Documentation</a>
+                <a href="https://cypress-cayenne-00d.notion.site/Making-of-beasty-2145118366ab809d91c1d42dd96cc57a" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>Documentation</a>
               </span>
               <span className="beasty-footer-hint">]</span>
             </div>
