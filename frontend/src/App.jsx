@@ -211,14 +211,14 @@ if (response.success) {
               setTimeout(resolve, 4000);
             });
           }
-          // After all messages, if ping has returned, show ready
-          if (pingReturned) showReady();
+          // After all messages, always show ready
+          showReady();
         };
         animateMessages();
         // Start pinging Beasty in parallel
         beastyApi.ping(accessToken).then(() => {
           pingReturned = true;
-          // If all messages have been shown, show ready
+          // If all messages have been shown, show ready (redundant, but safe)
           if (readyShown === false && displayedCommand === serverWakeMessages[serverWakeMessages.length - 1]) {
             showReady();
           }
