@@ -21,7 +21,7 @@ function Favicon() {
     ctx.fillText('b', size / 2, size / 2 + 8); // +8 for better vertical centering
 
     // Draw dot (attached to 'b', bigger and closer)
-    ctx.fillStyle = '#b7c9ce';
+    ctx.fillStyle = '#ff4b6e'; // Red dot
     ctx.beginPath();
     ctx.arc(size * 0.72, size * 0.36, size * 0.0625 * 3, 0, Math.PI * 2); // 6px at 128, attached to 'b'
     ctx.fill();
