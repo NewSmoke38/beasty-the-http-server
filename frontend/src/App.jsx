@@ -370,7 +370,7 @@ if (response.success) {
                       element.scrollIntoView({ behavior: 'smooth' });
                     }
                   }, 100);
-                }} style={{ color: '#7ed6df', textDecoration: 'underline', cursor: 'pointer', fontWeight: 'bold' }}>(User Guide)</a> explain how it works.
+                }} style={{ color: '#7ed6df', textDecoration: 'underline', cursor: 'pointer', fontWeight: 'bold' }}>(User Guide)</a> explains how it works.
               </div>
               <div className="beasty-desc beasty-desc-secondary" style={{ fontSize: '0.9rem', marginTop: '5px' }}>
                 (recommended to read first, then try)
