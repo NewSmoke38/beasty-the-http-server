@@ -2,8 +2,8 @@ import React, { useEffect } from 'react';
 
 function Favicon() {
   useEffect(() => {
-    // Draw directly at 32x32 for sharpness
-    const size = 32;
+    // Create high-res canvas for favicon
+    const size = 128; // High-res size
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
@@ -13,24 +13,34 @@ function Favicon() {
     ctx.fillStyle = '#181c20';
     ctx.fillRect(0, 0, size, size);
 
-    // Draw 'b' letter
+    // Draw 'b' letter (smaller for clarity)
     ctx.fillStyle = '#f6c177';
-    ctx.font = 'bold 24px "Press Start 2P"';
+    ctx.font = 'bold 64px "Press Start 2P"'; // Smaller 'b'
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('b', size / 2, size / 2 + 2); // +2 for better vertical centering
+    ctx.fillText('b', size / 2, size / 2 + 6); // +6 for better vertical centering
 
     // Draw dot
     ctx.fillStyle = '#b7c9ce';
     ctx.beginPath();
-    ctx.arc(size * 0.75, size * 0.22, size * 0.0625 * 4, 0, Math.PI * 2); // 2px at 32
+    ctx.arc(size * 0.75, size * 0.22, size * 0.0625 * 4, 0, Math.PI * 2); // 8px at 128
     ctx.fill();
+
+    // Create a 32x32 canvas for the favicon
+    const faviconCanvas = document.createElement('canvas');
+    faviconCanvas.width = 32;
+    faviconCanvas.height = 32;
+    const faviconCtx = faviconCanvas.getContext('2d');
+    // Enable image smoothing for polished look
+    faviconCtx.imageSmoothingEnabled = true;
+    faviconCtx.imageSmoothingQuality = 'high';
+    faviconCtx.drawImage(canvas, 0, 0, 32, 32);
 
     // Convert to favicon
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
     link.type = 'image/x-icon';
     link.rel = 'shortcut icon';
-    link.href = canvas.toDataURL();
+    link.href = faviconCanvas.toDataURL();
     document.getElementsByTagName('head')[0].appendChild(link);
   }, []);
 
