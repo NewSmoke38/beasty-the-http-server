@@ -164,6 +164,14 @@ if (response.success) {
         }
 
         setShowLogin(false);
+        // Show a sequence of server ready messages in the merge box
+        setResponse({ message: 'Waking up Beasty server...' });
+        setTimeout(() => {
+          setResponse({ message: 'Getting things ready...' });
+          setTimeout(() => {
+            setResponse({ message: 'Ready! You are logged in.' });
+          }, 1000);
+        }, 1000);
       } else {
         setLoginError(response.message || 'Login failed. Please try again.');
       }
