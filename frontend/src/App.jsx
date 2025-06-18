@@ -169,7 +169,7 @@ if (response.success) {
         }
 
         setShowLogin(false);
-        // Show a sequence of server ready messages in the req url area (displayedCommand)
+        // Show a sequence of server ready messages in the req url area (displayedCommand) with typing animation
         const serverWakeMessages = [
           'Waking up Beasty server...',
           'Brewing some code magic...',
@@ -180,39 +180,53 @@ if (response.success) {
           'Almost there, dusting off bits...',
           'Final system checks...'
         ];
-        let readyMsgTimeouts = [];
         let pingReturned = false;
         let readyShown = false;
         const showReady = () => {
           if (!readyShown) {
-            setDisplayedCommand('Ready! Beasty is awake. Choose a request to begin!');
+            animateDisplayedCommand('Ready! Beasty is awake. Choose a request to begin!');
             readyShown = true;
           }
         };
-        // Show each message for 3s
-        serverWakeMessages.forEach((msg, idx) => {
-          readyMsgTimeouts.push(setTimeout(() => {
-            setDisplayedCommand(msg);
-            // If this is the last message and ping has returned, show ready
-            if (idx === serverWakeMessages.length - 1 && pingReturned) {
-              showReady();
+        // Helper to animate a message in the req url area
+        const animateDisplayedCommand = (msg) => {
+          setShowCursor(false);
+          let currentIndex = 0;
+          setIsTyping(false);
+          const typingInterval = setInterval(() => {
+            if (currentIndex <= msg.length) {
+              setDisplayedCommand(msg.slice(0, currentIndex));
+              currentIndex++;
+            } else {
+              clearInterval(typingInterval);
+              setShowCursor(true);
             }
-          }, idx * 3000));
-        });
+          }, 40);
+        };
+        // Sequentially animate each message for 4s
+        const animateMessages = async () => {
+          for (let idx = 0; idx < serverWakeMessages.length; idx++) {
+            await new Promise((resolve) => {
+              animateDisplayedCommand(serverWakeMessages[idx]);
+              setTimeout(resolve, 4000);
+            });
+          }
+          // After all messages, if ping has returned, show ready
+          if (pingReturned) showReady();
+        };
+        animateMessages();
         // Start pinging Beasty in parallel
         beastyApi.ping(accessToken).then(() => {
           pingReturned = true;
           // If all messages have been shown, show ready
-          if (window.__beastyReadyMsgTimeouts && window.__beastyReadyMsgTimeouts.length === serverWakeMessages.length) {
+          if (readyShown === false && displayedCommand === serverWakeMessages[serverWakeMessages.length - 1]) {
             showReady();
           }
         }).catch(() => {
-          // Even if ping fails, show ready after all messages
-          if (window.__beastyReadyMsgTimeouts && window.__beastyReadyMsgTimeouts.length === serverWakeMessages.length) {
+          if (readyShown === false && displayedCommand === serverWakeMessages[serverWakeMessages.length - 1]) {
             showReady();
           }
         });
-        window.__beastyReadyMsgTimeouts = readyMsgTimeouts;
       } else {
         setLoginError(response.message || 'Login failed. Please try again.');
       }
