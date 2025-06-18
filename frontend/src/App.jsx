@@ -123,6 +123,11 @@ function App() {
   const handleOptionSelect = (option) => {
     setHttpOption(option);
     setIsDropdownOpen(false);
+    // Clear any ready message timeouts
+    if (window.__beastyReadyMsgTimeouts) {
+      window.__beastyReadyMsgTimeouts.forEach(clearTimeout);
+      window.__beastyReadyMsgTimeouts = null;
+    }
     setIsTyping(true);
     setShowResponseCursor(false); // Hide response cursor when new command starts.   // very imp
   };
@@ -164,14 +169,18 @@ if (response.success) {
         }
 
         setShowLogin(false);
-        // Show a sequence of server ready messages in the merge box
-        setResponse({ message: 'Waking up Beasty server...' });
-        setTimeout(() => {
-          setResponse({ message: 'Getting things ready...' });
-          setTimeout(() => {
-            setResponse({ message: 'Ready! You are logged in.' });
-          }, 1000);
-        }, 1000);
+        // Show a sequence of server ready messages in the req url area (displayedCommand)
+        setDisplayedCommand('Waking up Beasty server...');
+        let readyMsgTimeouts = [];
+        readyMsgTimeouts.push(setTimeout(() => {
+          setDisplayedCommand('Getting things ready...');
+          readyMsgTimeouts.push(setTimeout(() => {
+            setDisplayedCommand('Ready! Beasty is awake. Choose a request to begin!');
+          }, 2000));
+        }, 2000));
+        // Clear these timeouts if user logs out or selects a request
+        // (see handleOptionSelect below)
+        window.__beastyReadyMsgTimeouts = readyMsgTimeouts;
       } else {
         setLoginError(response.message || 'Login failed. Please try again.');
       }
