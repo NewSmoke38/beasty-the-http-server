@@ -265,7 +265,23 @@ const server = net.createServer((l) => {
                 if (ipBlockList.has(ip)) {
                     const blockData = ipBlockList.get(ip);
                     if (blockData.blockedUntil > Date.now()) {
-                        l.destroy();
+                        // Send a clear error message for blocked IP
+                        const body = JSON.stringify({
+                            error: "Access denied",
+                            details: "You have been blocked for a week. Please try again after 7 days."
+                        });
+                        const response = [
+                            "HTTP/1.1 403 Forbidden",
+                            "Content-Type: application/json",
+                            ...corsHeaders(origin),
+                            ...securityHeaders,
+                            `Content-Length: ${Buffer.byteLength(body)}`,
+                            "",
+                            body
+                        ].join("\r\n");
+                        l.write(response, () => {
+                            l.destroy();
+                        });
                         return;
                     } else {
                         ipBlockList.delete(ip);
@@ -370,9 +386,9 @@ const server = net.createServer((l) => {
             
             // When rate limit is exceeded (5th request)
             if (userRequests.count > config.rateLimit.max) {
-                // Block the IP for 3 minutes (was 7 days)
+                // Block the IP for 1 week (7 days)
                 ipBlockList.set(ip, {
-                    blockedUntil: Date.now() + (3 * 60 * 1000), // 3 minutes
+                    blockedUntil: Date.now() + (7 * 24 * 60 * 60 * 1000), // 1 week
                     violations: (ipBlockList.get(ip)?.violations || 0) + 1
                 });
 
