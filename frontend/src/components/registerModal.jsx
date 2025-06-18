@@ -142,9 +142,14 @@ const RegisterModal = ({ onClose }) => {
       setButtonText('Registering...');
       timerRefs.current = [
         setTimeout(() => setButtonText('Weaving magic...'), 2000),
-        setTimeout(() => setButtonText('Tucking you in...'), 4000),
-        setTimeout(() => setButtonText('Sprinkling stardust...'), 6000),
-        setTimeout(() => setButtonText('Almost ready...'), 8000),
+        setTimeout(() => setButtonText('Crafting your space...'), 4000),
+        setTimeout(() => setButtonText('Adding sparkles...'), 6000),
+        setTimeout(() => setButtonText('Tucking you in...'), 8000),
+        setTimeout(() => setButtonText('Sprinkling stardust...'), 10000),
+        setTimeout(() => setButtonText('Making it cozy...'), 12000),
+        setTimeout(() => setButtonText('Almost ready...'), 14000),
+        setTimeout(() => setButtonText('Final touches...'), 16000),
+        setTimeout(() => setButtonText('Just a moment...'), 18000),
       ];
     } else {
       setButtonText('Register');
