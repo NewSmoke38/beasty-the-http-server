@@ -710,8 +710,29 @@ body, html, #root, .beasty-bg {
   100% { opacity: 0.7; }
 }
 
+@keyframes githubFade {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; }
+  100% { opacity: 0.8; }
+}
+
 .beasty-register-btn {
   animation: registerBlink 2s infinite;
+}
+
+.beasty-github-btn {
+  background: #1a1f2e;
+  color: rgba(126, 214, 223, 0.7);
+  border: 1.5px solid rgba(126, 214, 223, 0.5);
+  transition: all 0.3s ease;
+}
+
+.beasty-github-btn:hover {
+  background: #2a3f4e;
+  color: rgba(255, 255, 255, 0.9);
+  border: 1.5px solid rgba(126, 214, 223, 0.8);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(126, 214, 223, 0.2);
 }
 
 .beasty-dot {

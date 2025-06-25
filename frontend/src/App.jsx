@@ -478,11 +478,27 @@ if (response.success) {
         <span className="beasty-auth-btns">
           {!user ? (
             <>
+              <button 
+                className="beasty-btn beasty-github-btn" 
+                onClick={() => window.open('https://github.com/NewSmoke38/beasty-the-http-server', '_blank')}
+                title="View on GitHub"
+              >
+                GitHub
+              </button>
               <button className="beasty-btn beasty-register-btn" onClick={() => setShowRegister(true)}>Register</button>
               <button className="beasty-btn" onClick={() => setShowLogin(true)}>Login</button>
             </>
           ) : (
-            <button className="beasty-btn" onClick={handleLogout}>Logout</button>
+            <>
+              <button 
+                className="beasty-btn beasty-github-btn" 
+                onClick={() => window.open('https://github.com/NewSmoke38/beasty-the-http-server', '_blank')}
+                title="View on GitHub"
+              >
+                GitHub
+              </button>
+              <button className="beasty-btn" onClick={handleLogout}>Logout</button>
+            </>
           )}
         </span>
       </div>
