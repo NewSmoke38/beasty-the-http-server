@@ -84,22 +84,22 @@ cd beasty-the-http-server
 
 ```bash
 cd backend && npm install
-```
+
 **bcrypt**, **cors**, **dotenv**, **express**, **jsonwebtoken**, **mongoose**, **nodemon**
+```
 
 ## Beasty Dependencies
 ```bash
 cd beasty && npm install
-```
+
 **jsonwebtoken**, **node-fetch**, **nodemon**
+```
 
 ## Frontend Dependencies
 ```bash
 cd frontend && npm install
-```
+
 **axios**, **jwt-decode**, **react**, **react-dom**, **vite**, **eslint** 
-
-
 ```
 
 
