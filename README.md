@@ -77,11 +77,10 @@ I learned a lot building this project — the logic was determined by me alone (
 # Clone & install
 git clone https://github.com/NewSmoke38/beasty-the-http-server.git
 cd beasty-the-http-server
-
+```
 # Dependencies
 
 ## Backend Dependencies 
-
 ```bash
 cd backend && npm install bcrypt cors dotenv express jsonwebtoken mongoose nodemon
 ```
