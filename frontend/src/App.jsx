@@ -444,11 +444,41 @@ if (response.success) {
                 disabled={!user || requestCount >= 5}
                 style={{ pointerEvents: !user || requestCount >= 5 ? 'none' : 'auto' }}
               >
-                <span className="beasty-footer-hint beasty-footer-orange">[Enter→</span>Send<span className="beasty-footer-hint">]</span>
+                <span className="beasty-footer-hint beasty-footer-orange">[Enter-</span>Send<span className="beasty-footer-hint">]</span>
               </button>
-              <span className="beasty-footer-hint">[Open→</span>
-              <span className="beasty-doc-link">
+              <span className="beasty-footer-hint">[Open</span>
+              <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#b7c9ce', margin: '0' }}>-</span>
+              <span className="beasty-doc-link" style={{ marginLeft: '0' }}>
                 <a href="https://cypress-cayenne-00d.notion.site/Making-of-beasty-2145118366ab809d91c1d42dd96cc57a" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>Documentation</a>
+              </span>
+              <span className="beasty-footer-hint">]</span>
+            </div>
+            {/* Hacker test button */}
+            <div className="beasty-hacker-nav">
+              <span className="beasty-footer-hint">[Test-</span>
+              <span className="beasty-footer-hint">
+                <a 
+                  href="https://www.notion.so/Making-of-beasty-2145118366ab809d91c1d42dd96cc57a?pvs=97#2195118366ab80509ed3effb0c537736" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  onClick={(e) => {
+                    console.log('Redirecting to Notion testing guide...');
+                  }}
+                  style={{ 
+                    color: 'rgba(126, 214, 223, 0.7)', 
+                    textDecoration: 'none',
+                    transition: 'all 0.3s ease',
+                    borderBottom: '1px solid transparent'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.borderBottom = '1px solid rgba(126, 214, 223, 0.8)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.borderBottom = '1px solid transparent';
+                  }}
+                >
+                  Terminal
+                </a>
               </span>
               <span className="beasty-footer-hint">]</span>
             </div>

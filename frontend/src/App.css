@@ -255,17 +255,29 @@ body, html, #root, .beasty-bg {
   width: 100%;
   display: flex;
   justify-content: center;
-  gap: 1.2rem;
+  gap: 2rem;
   margin-top: 1.5rem;
-  font-size: 1.08rem;
+  font-size: 1.2rem;
   color: #b7c9ce;
   font-family: 'Press Start 2P', 'VT323', monospace;
 }
 .beasty-footer-hint {
   color: #b7c9ce;
   font-weight: 500;
-  margin: 0 0.1rem;
+  margin: 0 0.2rem;
+  font-size: 1.2rem;
 }
+
+.beasty-footer-hint:has(+ .beasty-hacker-link) {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.beasty-hacker-link + .beasty-footer-hint {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
 .beasty-footer-orange {
   color: #f6c177;
 }
@@ -673,6 +685,32 @@ body, html, #root, .beasty-bg {
 .beasty-doc-link:hover {
   color: #ff3358;
   border-bottom: 1px solid #ff3358;
+}
+
+.beasty-hacker-link {
+  color: rgba(126, 214, 223, 0.7);
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid transparent;
+  text-shadow: 0 0 5px rgba(126, 214, 223, 0.3);
+}
+
+.beasty-hacker-link:hover {
+  color: rgba(126, 214, 223, 0.9);
+  border-bottom: 1px solid rgba(126, 214, 223, 0.8);
+  text-shadow: 0 0 8px rgba(126, 214, 223, 0.5);
+}
+
+.beasty-hacker-nav {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.2rem;
+  font-size: 1.1rem;
+  color: #b7c9ce;
+  font-family: 'Press Start 2P', 'VT323', monospace;
 }
 
 .beasty-send-btn {
