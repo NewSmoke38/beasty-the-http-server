@@ -117,6 +117,28 @@ export const authAPI = {
   }
 };
 
+export const visitorAPI = {
+  getCount: async () => {
+    try {
+      const response = await api.get('/v1/visitors/count');
+      return response.data;
+    } catch (error) {
+      console.error('Failed to get visitor count:', error);
+      throw error.response?.data || error.message;
+    }
+  },
+
+  incrementCount: async () => {
+    try {
+      const response = await api.post('/v1/visitors/increment');
+      return response.data;
+    } catch (error) {
+      console.error('Failed to increment visitor count:', error);
+      throw error.response?.data || error.message;
+    }
+  }
+};
+
 beastyApi.ping = async (token) => {
   try {
     const response = await beastyApi.get('/api/v1/beasty/ping', {

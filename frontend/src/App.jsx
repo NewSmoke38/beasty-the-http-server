@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
 import RegisterModal from './components/registerModal';
-import { authAPI, beastyApi } from './services/api';
+import { authAPI, beastyApi, visitorAPI } from './services/api';
 import DNA from './components/DNA';
 import Logs from './components/Logs';
 import Lore from './components/Lore';
@@ -326,7 +326,8 @@ if (response.success) {
     }
   };
 
- useEffect(() => {
+  // Improved visitor count with backend API
+  useEffect(() => {
     // Rehydrate user from localStorage on app load
     const token = localStorage.getItem('token');
     if (token && !isTokenExpired(token)) {
@@ -334,11 +335,29 @@ if (response.success) {
     } else {
       setUser(null);
     }
-    const currentCount = parseInt(localStorage.getItem('visitorCount') || '0');
-    const newCount = currentCount + 1;
-    localStorage.setItem('visitorCount', newCount.toString());
-    setVisitorCount(newCount);
-  }, []); 
+
+    const handleVisitorCount = async () => {
+      try {
+        // First, try to increment the count (backend handles cooldown)
+        const incrementResponse = await visitorAPI.incrementCount();
+        setVisitorCount(incrementResponse.data.totalVisits);
+      } catch (error) {
+        console.error('Failed to increment visitor count:', error);
+        // Fallback: try to get current count
+        try {
+          const countResponse = await visitorAPI.getCount();
+          setVisitorCount(countResponse.data.totalVisits);
+        } catch (fallbackError) {
+          console.error('Failed to get visitor count:', fallbackError);
+          // Final fallback: use localStorage
+          const fallbackCount = parseInt(localStorage.getItem('visitorCount') || '0');
+          setVisitorCount(fallbackCount);
+        }
+      }
+    };
+
+    handleVisitorCount();
+  }, []);
 
   const renderPage = () => {
     switch (currentPage) {

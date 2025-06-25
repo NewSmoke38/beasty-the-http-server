@@ -23,10 +23,12 @@ global.serverStartTime = Date.now();
 import userRouter from './routes/user.routes.js'
 import beastyRoutes from "./routes/beasty.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
+import visitorRoutes from "./routes/visitor.routes.js";
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/beasty", beastyRoutes);
 app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/visitors", visitorRoutes);
 
 
 // http://localhost:4000/api/v1/users/register
