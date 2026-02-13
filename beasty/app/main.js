@@ -1,7 +1,5 @@
 import net from 'net';
 import zlib from 'zlib';   /// for compression
-import dotenv from 'dotenv';
-dotenv.config();
 import { config } from '../config.js';
 import jwt from 'jsonwebtoken';
 import { logRequest } from './logger.js';
@@ -199,7 +197,11 @@ const server = net.createServer((l) => {
         console.log('JWT Secret configured:', config.jwtSecret ? 'YES' : 'NO', '(length:', config.jwtSecret?.length, ')');
 
         if (authHeader) {
-            const token = authHeader.split(' ')[1];
+            console.log('Auth header:', authHeader);
+            // Extract token: "Authorization: Bearer <token>" -> "<token>"
+            const headerValue = authHeader.split(':')[1]?.trim(); // Get everything after "Authorization:"
+            const token = headerValue?.replace('Bearer ', ''); // Remove "Bearer " prefix
+            console.log('Extracted token:', token?.substring(0, 50) + '...');
             try {
                 const decoded = jwt.verify(token, config.jwtSecret);
                 isAdmin = decoded.role === 'admin';
