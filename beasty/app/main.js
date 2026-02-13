@@ -1,5 +1,7 @@
 import net from 'net';
 import zlib from 'zlib';   /// for compression
+import dotenv from 'dotenv';
+dotenv.config();
 import { config } from '../config.js';
 import jwt from 'jsonwebtoken';
 import { logRequest } from './logger.js';
