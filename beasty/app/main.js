@@ -196,15 +196,19 @@ const server = net.createServer((l) => {
         const authHeader = headers.find(h => h.toLowerCase().startsWith('authorization:'));
         let isAdmin = false;
 
+        console.log('JWT Secret configured:', config.jwtSecret ? 'YES' : 'NO', '(length:', config.jwtSecret?.length, ')');
+
         if (authHeader) {
             const token = authHeader.split(' ')[1];
             try {
                 const decoded = jwt.verify(token, config.jwtSecret);
                 isAdmin = decoded.role === 'admin';
-                console.log('User role:', decoded.role);
+                console.log('✅ JWT verified. User role:', decoded.role, '| isAdmin:', isAdmin);
             } catch (error) {
-                console.log('JWT verification failed:', error.message);
+                console.log('❌ JWT verification failed:', error.message);
             }
+        } else {
+            console.log('No authorization header found');
         }
 
         // Handle preflight requests
