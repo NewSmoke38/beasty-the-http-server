@@ -3,7 +3,7 @@ export const config = {
 
     backendUrl: process.env.BACKEND_URL || 'https://beasty-backend.onrender.com',
 
-    jwtSecret: process.env.JWT_SECRET || 'your-super-secret-jwt-key',
+    jwtSecret: process.env.ACCESS_TOKEN_SECRET || 'your-super-secret-jwt-key',
 
     corsOrigins: process.env.CORS_ORIGINS?.split(',') || [
         'http://localhost:5174',
@@ -41,16 +41,16 @@ export const config = {
     // IP Access control
     ipAccess: {
         whitelist: [],
-        
+
         blacklist: [],
-        
+
         enabled: true
     },
 
     // Request throttling (good)
     throttling: {
         minTimeBetweenRequests: 1000,  // 1 second
-        
+
         enabled: true
     }
 };
