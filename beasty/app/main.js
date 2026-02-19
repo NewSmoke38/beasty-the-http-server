@@ -752,11 +752,15 @@ const server = net.createServer((l) => {
                     clearTimeout(timeout);
                     const body = JSON.stringify({
                         error: "Beasty Error",
-                        details: "You have used all 4 of your allowed Beasty requests."
+                        details: err.message || "Something went wrong while processing your request."
                     });
 
+                    const statusCode = err.message?.includes("exceeded") || err.message?.includes("allowed")
+                        ? "403 Forbidden"
+                        : "500 Internal Server Error";
+
                     const response = [
-                        "HTTP/1.1 403 Forbidden",
+                        `HTTP/1.1 ${statusCode}`,
                         "Content-Type: application/json",
                         ...corsHeaders(origin),
                         ...securityHeaders,

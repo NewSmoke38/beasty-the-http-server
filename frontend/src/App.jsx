@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { jwtDecode } from 'jwt-decode';
 import './App.css';
 import RegisterModal from './components/registerModal';
 import { authAPI, beastyApi, visitorAPI } from './services/api';
@@ -27,6 +28,7 @@ function App() {
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const dropdownRef = useRef(null);
   const [response, setResponse] = useState(null);
   const [remainingRequests, setRemainingRequests] = useState(null);
@@ -57,9 +59,9 @@ function App() {
       } catch (error) {
         console.error('Token cleanup error:', error);
       }
-        }, 10800000);
+    }, 10800000);
     return () => clearInterval(interval);
-}, []);
+  }, []);
 
   // Handle token operations with error handling
   const handleTokenOperation = (operation) => {
@@ -77,7 +79,7 @@ function App() {
       setShowCursor(false);
       const command = `curl -i https://beasty-server.onrender.com${httpOption.split(' ')[1]}`;
       let currentIndex = 0;
-      
+
       const typingInterval = setInterval(() => {
         if (currentIndex <= command.length) {
           setDisplayedCommand(command.slice(0, currentIndex));
@@ -89,7 +91,7 @@ function App() {
         }
       }, 50);
 
-  return () => clearInterval(typingInterval);
+      return () => clearInterval(typingInterval);
     }
   }, [httpOption, isTyping]);
 
@@ -99,10 +101,10 @@ function App() {
       setIsResponseTyping(true);
       setShowResponseCursor(false);
       setShowCursor(false);
-      
+
       const responseStr = JSON.stringify(response, null, 2);
       let currentIndex = 0;
-      
+
       const typingInterval = setInterval(() => {
         if (currentIndex <= responseStr.length) {
           const partialResponse = responseStr.slice(0, currentIndex);
@@ -143,19 +145,30 @@ function App() {
         password: e.target.password.value
       });
 
-if (response.success) {
+      if (response.success) {
         const { accessToken } = response.data;
-        
+
         if (handleTokenOperation(() => isTokenExpired(accessToken))) {
           setLoginError('Login failed: Token expired');
           return;
+        }
+
+        // Persist token to localStorage so session survives refresh
+        localStorage.setItem('token', accessToken);
+
+        // Check if user is admin from JWT
+        try {
+          const decoded = jwtDecode(accessToken);
+          setIsAdmin(decoded.role === 'admin');
+        } catch (e) {
+          setIsAdmin(false);
         }
 
         setUser({
           ...response.data.user,
           token: accessToken
         });
-        
+
         const expirationTime = handleTokenOperation(() => getTokenExpirationTime(accessToken));
         if (expirationTime) {
           const timeUntilExpiry = expirationTime - Date.now();
@@ -241,7 +254,9 @@ if (response.success) {
   const handleLogout = () => {
     console.log('=== Logout Process Started ===');
     console.log('Current user before logout:', user);
+    localStorage.removeItem('token');
     setUser(null);
+    setIsAdmin(false);
     setRemainingRequests(null);
     setRequestCount(0); // Reset request count on logout
     console.log('User state cleared');
@@ -265,7 +280,7 @@ if (response.success) {
 
       const endpoint = httpOption.split(' ')[1];
       console.log('Sending request to Beasty server:', endpoint);
-      
+
 
 
       // real game starte here in the merge box
@@ -277,10 +292,10 @@ if (response.success) {
           'Content-Type': 'application/json'
         }
       });
-      
+
       const data = await response.json();
       console.log('Beasty server response:', data);
-      
+
       // Update remaining requests from the response
       if (data.remainingRequests !== undefined) {
         setRemainingRequests(data.remainingRequests);
@@ -332,8 +347,17 @@ if (response.success) {
     const token = localStorage.getItem('token');
     if (token && !isTokenExpired(token)) {
       setUser({ token });
+      // Restore admin status from persisted token
+      try {
+        const decoded = jwtDecode(token);
+        setIsAdmin(decoded.role === 'admin');
+      } catch (e) {
+        setIsAdmin(false);
+      }
     } else {
+      localStorage.removeItem('token');
       setUser(null);
+      setIsAdmin(false);
     }
 
     const handleVisitorCount = async () => {
@@ -397,7 +421,7 @@ if (response.success) {
             </div>
             {/* Custom HTTP dropdown field */}
             <div className="custom-dropdown-container" ref={dropdownRef}>
-              <div 
+              <div
                 className="custom-dropdown-header"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               >
@@ -438,11 +462,11 @@ if (response.success) {
             </div>
             {/* Footer navigation hints */}
             <div className="beasty-footer-nav">
-              <button 
-                className={`beasty-send-btn ${!user || requestCount >= 5 ? 'beasty-send-btn-disabled' : ''}`}
-                onClick={!user || requestCount >= 5 ? undefined : handleSendRequest}
-                disabled={!user || requestCount >= 5}
-                style={{ pointerEvents: !user || requestCount >= 5 ? 'none' : 'auto' }}
+              <button
+                className={`beasty-send-btn ${!user || (!isAdmin && requestCount >= 5) ? 'beasty-send-btn-disabled' : ''}`}
+                onClick={!user || (!isAdmin && requestCount >= 5) ? undefined : handleSendRequest}
+                disabled={!user || (!isAdmin && requestCount >= 5)}
+                style={{ pointerEvents: !user || (!isAdmin && requestCount >= 5) ? 'none' : 'auto' }}
               >
                 <span className="beasty-footer-hint beasty-footer-orange">[Enter-</span>Send<span className="beasty-footer-hint">]</span>
               </button>
@@ -457,15 +481,15 @@ if (response.success) {
             <div className="beasty-hacker-nav">
               <span className="beasty-footer-hint">[Test-</span>
               <span className="beasty-footer-hint">
-                <a 
-                  href="https://www.notion.so/Making-of-beasty-2145118366ab809d91c1d42dd96cc57a?pvs=97#2195118366ab80509ed3effb0c537736" 
-                  target="_blank" 
+                <a
+                  href="https://www.notion.so/Making-of-beasty-2145118366ab809d91c1d42dd96cc57a?pvs=97#2195118366ab80509ed3effb0c537736"
+                  target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => {
                     console.log('Redirecting to Notion testing guide...');
                   }}
-                  style={{ 
-                    color: 'rgba(126, 214, 223, 0.7)', 
+                  style={{
+                    color: 'rgba(126, 214, 223, 0.7)',
                     textDecoration: 'none',
                     transition: 'all 0.3s ease',
                     borderBottom: '1px solid transparent'
@@ -493,31 +517,31 @@ if (response.success) {
       {/* Top bar with tabs and path */}
       <div className="beasty-topbar">
         <span className="beasty-tabs">
-          <span 
+          <span
             className={`beasty-tab ${currentPage === 'main' ? 'beasty-tab-active' : ''}`}
             onClick={() => setCurrentPage('main')}
           >
             Main
           </span>
-          <span 
+          <span
             className={`beasty-tab ${currentPage === 'dna' ? 'beasty-tab-active' : ''}`}
             onClick={() => setCurrentPage('dna')}
           >
             DNA
           </span>
-          <span 
+          <span
             className={`beasty-tab ${currentPage === 'logs' ? 'beasty-tab-active' : ''}`}
             onClick={() => setCurrentPage('logs')}
           >
             Logs
           </span>
-          <span 
+          <span
             className={`beasty-tab ${currentPage === 'lore' ? 'beasty-tab-active' : ''}`}
             onClick={() => setCurrentPage('lore')}
           >
             Lore
           </span>
-          <span 
+          <span
             className={`beasty-tab ${currentPage === 'arch' ? 'beasty-tab-active' : ''}`}
             onClick={() => setCurrentPage('arch')}
           >
@@ -527,8 +551,8 @@ if (response.success) {
         <span className="beasty-auth-btns">
           {!user ? (
             <>
-              <button 
-                className="beasty-btn beasty-github-btn" 
+              <button
+                className="beasty-btn beasty-github-btn"
                 onClick={() => window.open('https://github.com/NewSmoke38/beasty-the-http-server', '_blank')}
                 title="View on GitHub"
               >
@@ -539,8 +563,8 @@ if (response.success) {
             </>
           ) : (
             <>
-              <button 
-                className="beasty-btn beasty-github-btn" 
+              <button
+                className="beasty-btn beasty-github-btn"
                 onClick={() => window.open('https://github.com/NewSmoke38/beasty-the-http-server', '_blank')}
                 title="View on GitHub"
               >
@@ -564,24 +588,24 @@ if (response.success) {
             <h2>Login</h2>
             {loginError && <div className="beasty-error">{loginError}</div>}
             <form onSubmit={handleLogin}>
-              <input 
-                className="beasty-input" 
-                type="email" 
+              <input
+                className="beasty-input"
+                type="email"
                 name="email"
-                placeholder="Email" 
+                placeholder="Email"
                 required
                 disabled={loginLoading}
               />
-              <input 
-                className="beasty-input" 
-                type="password" 
+              <input
+                className="beasty-input"
+                type="password"
                 name="password"
-                placeholder="Password" 
+                placeholder="Password"
                 required
                 disabled={loginLoading}
               />
-              <button 
-                className="beasty-btn" 
+              <button
+                className="beasty-btn"
                 type="submit"
                 disabled={loginLoading}
               >
