@@ -37,8 +37,9 @@ function normalizeIP(ip) {
 }
 
 function sanitizeToken(token) {
-    // remove any non-alphanumeric characters except dots and dashes (this really is good)
-    return token.replace(/[^a-zA-Z0-9\.-]/g, '');
+    // remove any non-alphanumeric characters except dots, dashes, and underscores
+    // (underscore is required — JWTs use base64url encoding which includes _ )
+    return token.replace(/[^a-zA-Z0-9\._-]/g, '');
 }
 
 function sanitizeQueryParams(queryString) {
